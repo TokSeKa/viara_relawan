@@ -15,6 +15,21 @@
         </a>
     </div>
 
+    {{-- ALERT SUKSES/ERROR --}}
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-1"></i> {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-triangle me-1"></i> {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    @endif
+
     <div class="row">
         {{-- KOLOM KIRI: Info User (READ ONLY) --}}
         <div class="col-md-8 mb-4">
@@ -24,7 +39,6 @@
                 </div>
                 <div class="card-body p-4">
                     
-                    {{-- Kita tidak pakai <form> lagi karena admin tidak boleh edit data ini --}}
                     <div class="row g-4">
                         
                         {{-- Foto Profil Dummy --}}
@@ -67,15 +81,13 @@
             </div>
         </div>
 
-        {{-- KOLOM KANAN: Tag & Aksi Admin --}}
+        {{-- KOLOM KANAN: Tag, Jabatan & Info --}}
         <div class="col-md-4">
             
-            {{-- CARD TAG (Area Kerja Admin) --}}
+            {{-- 1. CARD TAG (Area Kerja Admin) --}}
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center">
                     <span class="fw-bold"><i class="fas fa-tags me-2"></i> Tag & Minat</span>
-                    
-                    {{-- Tombol Edit Tag --}}
                     <a href="{{ route('admin.users.tags.edit', $user->id) }}" class="btn btn-sm btn-light fw-bold text-dark" style="font-size: 0.75rem;">
                         <i class="fas fa-cog me-1"></i> KELOLA
                     </a>
@@ -85,12 +97,10 @@
                         <div class="d-flex flex-wrap gap-2">
                             @foreach($user->tags as $tag)
                                 @if($tag->is_admin_only)
-                                    {{-- Tag Khusus Admin (Merah) --}}
                                     <span class="badge bg-danger bg-opacity-10 text-danger border border-danger">
                                         <i class="fas fa-lock me-1" style="font-size: 10px;"></i> {{ $tag->nama_tag }}
                                     </span>
                                 @else
-                                    {{-- Tag Publik (Biru) --}}
                                     <span class="badge bg-primary bg-opacity-10 text-primary border border-primary">
                                         {{ $tag->nama_tag }}
                                     </span>
@@ -103,14 +113,56 @@
                             <p class="small mb-0">User ini belum memiliki tag.</p>
                         </div>
                     @endif
-                    
-                    <div class="mt-3 pt-3 border-top text-center">
-                        <small class="text-muted fst-italic">Hanya Admin yang bisa melihat tag bertanda gembok <i class="fas fa-lock text-danger"></i>.</small>
-                    </div>
                 </div>
             </div>
 
-            {{-- CARD INFO SISTEM --}}
+            {{-- 2. CARD KELOLA JABATAN (BARU DITAMBAHKAN DISINI) --}}
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-warning bg-opacity-25 text-dark fw-bold py-3">
+                    <i class="fas fa-user-shield me-2"></i> Kelola Jabatan
+                </div>
+                <div class="card-body">
+                    
+                    {{-- Cek apakah ini User Genesis (ID 1)? --}}
+                    @if($user->id == 1)
+                        <div class="alert alert-secondary mb-0 border-0 d-flex align-items-center">
+                            <i class="fas fa-lock fa-2x me-3 opacity-50"></i>
+                            <div class="small lh-sm">
+                                <strong>Akun Dilindungi</strong><br>
+                                Jabatan Super Admin (Genesis) tidak dapat diubah demi keamanan sistem.
+                            </div>
+                        </div>
+                    @else
+                        {{-- Form Ubah Jabatan --}}
+                        <form action="{{ route('admin.users.update_jabatan', $user->id) }}" method="POST">
+                            @csrf
+                            @method('PUT')
+                            
+                            <div class="mb-3">
+                                <label class="small text-muted mb-1">Pilih Jabatan</label>
+                                <select name="jabatan" class="form-select">
+                                    <option value="relawan" {{ $user->jabatan == 'relawan' ? 'selected' : '' }}>Relawan (User Biasa)</option>
+                                    <option value="admin" {{ $user->jabatan == 'admin' ? 'selected' : '' }}>Admin (Pengelola)</option>
+                                    <option value="blokir" {{ $user->jabatan == 'blokir' ? 'selected' : '' }}>Blokir</option>
+                                </select>
+                            </div>
+
+                            <button type="submit" class="btn btn-warning w-100 fw-bold" onclick="return confirm('Apakah Anda yakin ingin mengubah hak akses user ini?');">
+                                <i class="fas fa-save me-1"></i> Simpan Perubahan
+                            </button>
+                            
+                            <div class="mt-2 text-center">
+                                <small class="text-muted" style="font-size: 0.7rem;">
+                                    *Admin memiliki akses penuh ke sistem.
+                                </small>
+                            </div>
+                        </form>
+                    @endif
+
+                </div>
+            </div>
+
+            {{-- 3. CARD INFO SISTEM --}}
             <div class="card shadow-sm border-0 bg-light">
                 <div class="card-body">
                     <h6 class="fw-bold text-muted mb-3 small text-uppercase">Metadata Akun</h6>

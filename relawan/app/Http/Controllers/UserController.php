@@ -124,4 +124,25 @@ class UserController extends Controller
 
         return redirect()->route('admin.users.show_admin_user', $id)->with('success', 'Tag pengguna berhasil diupdate!');
     }
+
+    public function update_jabatan(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        // PROTEKSI: User ID 1 tidak boleh diturunkan jabatannya
+        if ($user->id == 1) {
+            return back()->with('error', 'Akses Ditolak: Jabatan User Utama (Genesis) tidak dapat diubah!');
+        }
+
+        // Validasi: Hanya menerima input 'admin' atau 'relawan'
+        $request->validate([
+            'jabatan' => 'required|in:admin,relawan,blokir',
+        ]);
+
+        // Simpan perubahan
+        $user->jabatan = $request->jabatan;
+        $user->save();
+
+        return back()->with('success', 'Jabatan pengguna ' . $user->name . ' berhasil diubah menjadi ' . ucfirst($request->jabatan));
+    }
 }

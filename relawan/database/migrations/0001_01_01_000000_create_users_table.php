@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->unique();
             $table->string('password');
-            $table->enum('jabatan', ['admin', 'relawan'])->nullable();
+            $table->enum('jabatan', ['admin', 'relawan', 'blokir'])->nullable();
             $table->string('no_hp');
             $table->string('alamat');
             $table->enum('jenis_kelamin', ['laki-laki', 'perempuan']);

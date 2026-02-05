@@ -21,18 +21,32 @@ class KegiatanController extends Controller
      */
     public function index()
     {
-        // 1. Ambil data kegiatan
-        // - Filter: Hanya yang statusnya 'buka'
-        // - Sort: Tanggal mulai paling dekat ditaruh di atas
-        // - Eager Loading: with('detail') biar query ke tabel anak (donasi_dana, dll) efisien
-        // - Pagination: Tampilkan 9 kartu per halaman
+        // 1. Ambil ID Tag milik User yang sedang login
+        // Hasilnya array, misal: [2, 5] (Kesehatan, Lingkungan)
+        /** @var \App\Models\User $user */ // biar tags() gk show red alert
+        $user = Auth::user();
+        $userTagIds = $user->tags()->pluck('id')->toArray();
 
-        $kegiatans = Kegiatan::with('detail')
-            ->where('status', 'buka')
-            ->orderBy('tanggal_mulai', 'asc')
+        // 2. Query Kegiatan
+        $kegiatans = Kegiatan::with(['detail', 'tags']) // Load 'tags' juga biar efisien
+            ->where('status', 'buka') // Filter wajib: Status harus Buka
+
+            // --- FILTER PERSONALISASI (LOGIC TAG) ---
+            ->where(function ($q) use ($userTagIds) {
+                // KONDISI A: Kegiatan Spesifik (Cocok dengan Minat User)
+                $q->whereHas('tags', function ($subQuery) use ($userTagIds) {
+                    $subQuery->whereIn('tags.id', $userTagIds);
+                })
+
+                    // KONDISI B: Kegiatan Umum (Tidak punya tag spesifik)
+                    // Contoh: Acara Ulang Tahun Yayasan, Rapat Umum (Wajib muncul buat semua)
+                    ->orWhereDoesntHave('tags');
+            })
+
+            ->orderBy('tanggal_mulai', 'asc') // Urutkan yang paling dekat tanggalnya
             ->paginate(9);
 
-        // 2. Kirim ke View
+        // 3. Kirim ke View
         return view('relawan.daftar-kegiatan', compact('kegiatans'));
     }
 

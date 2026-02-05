@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {{-- Judul Halaman --}}
-    <title>@yield('title', 'Viara Maitreyawira Batam')</title>
+    {{-- Judul Halaman: Defaultnya ambil dari Nama Web (Profil User 1) --}}
+    <title>@yield('title', $webProfile->name)</title>
 
     {{-- Bootstrap CSS --}}
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -65,32 +65,30 @@
     <header>
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm py-3 border-bottom border-secondary">
             <div class="container">
-                {{-- 1. BRAND / LOGO --}}
-                {{-- Tambahkan d-flex dan batasi max-width agar tidak menabrak tombol menu --}}
+                {{-- 1. BRAND / LOGO (DINAMIS) --}}
                 <a class="navbar-brand fw-bold text-uppercase d-flex align-items-center gap-2" href="{{ url('/') }}" style="max-width: 85%;">
 
                     {{-- Ikon --}}
                     <i class="fas fa-hand-holding-heart text-warning fs-4 flex-shrink-0"></i>
 
                     {{-- Wrapper Teks & Badge --}}
-                    {{-- Di HP (Default): Flex Column (Atas Bawah). Di Layar Besar (lg): Flex Row (Sampingan) --}}
                     <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center lh-1">
 
-                        {{-- Teks Judul (text-wrap agar kalau kepanjangan di HP dia turun baris, bukan nabrak) --}}
-                        <span class="text-wrap" style="font-size: 1rem;">Viara Maitreyawira Batam</span>
-
-                        {{-- Label Admin --}}
+                        {{-- POSISI 1: Label Admin (Ditaruh Duluan) --}}
                         @if(Auth::check() && Auth::user()->jabatan == 'admin')
-                        {{-- Badge ditaruh di bawah teks pada HP, dan di sebelah kanan teks pada Desktop --}}
-                        <span class="badge bg-danger mt-1 mt-lg-0 ms-0 ms-lg-2" style="font-size: 0.6rem; width: fit-content;">
+                        <span class="badge bg-danger mb-1 mb-lg-0 me-0 me-lg-2" style="font-size: 0.6rem; width: fit-content;">
                             ADMIN PANEL
                         </span>
                         @endif
+
+                        {{-- POSISI 2: Teks Judul (Ambil dari $webProfile) --}}
+                        <span class="text-wrap" style="font-size: 1rem;">{{ $webProfile->name }}</span>
+
                     </div>
                 </a>
 
-                {{-- Tombol Menu Custom: Teks + Ikon --}}
-                <button class="navbar-toggler border-0 d-flex align-items-center gap-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="outline: none; box-shadow: none;">
+                {{-- Tombol Menu Custom: Teks + Ikon (Fixed d-lg-none) --}}
+                <button class="navbar-toggler border-0 d-flex d-lg-none align-items-center gap-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="outline: none; box-shadow: none;">
                     <span class="fw-bold text-white small text-uppercase" style="letter-spacing: 1px;">Menu</span>
                     <i class="fas fa-bars text-white fs-4"></i>
                 </button>
@@ -145,42 +143,45 @@
                         {{-- Pemisah Vertikal --}}
                         <li class="nav-item d-none d-lg-block mx-2 border-end border-secondary" style="height: 20px;"></li>
 
-                        {{-- DROPDOWN USER (Sama untuk Keduanya) --}}
+                        {{-- DROPDOWN USER (Clean Version) --}}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle btn btn-outline-secondary px-3 text-white border-0" href="#" role="button" data-bs-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle text-white px-3" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fas fa-user-circle me-1"></i> {{ Auth::user()->name ?? 'Tamu' }}
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end shadow">
 
-                                {{-- Menu Dropdown Admin vs Relawan beda sedikit --}}
-                                @if(Auth::check() && Auth::user()->jabatan != 'admin')
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="userDropdown">
                                 <li>
-                                    <a class="dropdown-item" href="{{ route('user.profile.edit') }}">
-                                        <i class="fas fa-id-card me-2 text-muted"></i> Profil Saya
+                                    <h6 class="dropdown-header text-uppercase small text-muted">Akun Saya</h6>
+                                </li>
+
+                                @if(Auth::check())
+                                <li>
+                                    <a class="dropdown-item py-2" href="{{ route('user.profile.edit') }}">
+                                        <i class="fas fa-id-card me-2 text-secondary w-25"></i> Profil Saya
                                     </a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item" href="{{ route('user.tags.edit') }}">
-                                        <i class="fas fa-tags me-2 text-muted"></i> Minat & Skill
+                                    <a class="dropdown-item py-2" href="{{ route('user.tags.edit') }}">
+                                        <i class="fas fa-tags me-2 text-secondary w-25"></i> Minat & Skill
                                     </a>
                                 </li>
                                 @endif
 
-                                {{-- Notifikasi (Mobile) --}}
                                 <li class="d-lg-none">
-                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#notificationModal">
-                                        <i class="fas fa-bell me-2 text-muted"></i> Notifikasi
+                                    <a class="dropdown-item py-2" href="#" data-bs-toggle="modal" data-bs-target="#notificationModal">
+                                        <i class="fas fa-bell me-2 text-secondary w-25"></i> Notifikasi
                                     </a>
                                 </li>
 
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>
+
                                 <li>
                                     <form action="{{ route('logout') }}" method="POST">
                                         @csrf
-                                        <button type="submit" class="dropdown-item text-danger">
-                                            <i class="fas fa-sign-out-alt me-2"></i> Logout
+                                        <button type="submit" class="dropdown-item py-2 text-danger fw-bold">
+                                            <i class="fas fa-sign-out-alt me-2 w-25"></i> Logout
                                         </button>
                                     </form>
                                 </li>
@@ -212,30 +213,40 @@
         @yield('content')
     </main>
 
-    {{-- 2. FOOTER --}}
+    {{-- 2. FOOTER (DINAMIS DARI USER 1) --}}
     <footer class="bg-dark text-white pt-5 pb-3 border-top border-secondary mt-auto">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-md-6 mb-3 mb-md-0">
+                    {{-- Nama Web --}}
                     <h5 class="fw-bold text-uppercase text-warning mb-2">
-                        <i class="fas fa-hands-helping me-2"></i> Viara Maitreyawira Batam
+                        <i class="fas fa-hands-helping me-2"></i> {{ $webProfile->name }}
                     </h5>
+                    {{-- Alamat Web (Jika ada, jika tidak tampilkan default) --}}
                     <p class="mb-1 text-white-50" style="font-size: 0.95rem;">
-                        Wadah kebersamaan untuk kegiatan sosial dan kemanusiaan.
+                        {{ $webProfile->address ?? 'Wadah kebersamaan untuk kegiatan sosial dan kemanusiaan.' }}
                     </p>
                 </div>
                 <div class="col-md-6 text-md-end">
                     <div class="p-3 rounded border border-secondary d-inline-block bg-secondary bg-opacity-10">
-                        <small class="text-uppercase text-warning fw-bold d-block mb-1">Butuh Bantuan?</small>
-                        <span class="fs-6 fw-bold">
-                            <i class="fas fa-envelope me-2"></i> info@viaramaitreyawira.batam
+                        <small class="text-uppercase text-warning fw-bold d-block mb-2">Butuh Bantuan?</small>
+                        
+                        {{-- Email Dinamis --}}
+                        <span class="fs-6 fw-bold d-block">
+                            <i class="fas fa-envelope me-2"></i> {{ $webProfile->email }}
+                        </span>
+
+                        {{-- No HP Dinamis --}}
+                        <span class="fs-6 fw-bold d-block mt-1">
+                            <i class="fas fa-phone me-2"></i> {{ $webProfile->phone }}
                         </span>
                     </div>
                 </div>
             </div>
             <hr class="border-secondary my-4">
             <div class="text-center text-secondary small">
-                &copy; {{ date('Y') }} Viara Maitreyawira Batam. Mari berbuat baik hari ini.
+                {{-- Copyright Dinamis --}}
+                &copy; {{ date('Y') }} {{ $webProfile->name }}. Mari berbuat baik hari ini.
             </div>
         </div>
     </footer>

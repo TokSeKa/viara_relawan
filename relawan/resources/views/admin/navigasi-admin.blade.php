@@ -4,21 +4,27 @@
 
 @section('content')
 <div class="container pb-5">
-    
-    {{-- 1. HERO SECTION: Sambutan Admin --}}
-    <div class="bg-dark text-white rounded-3 p-4 mb-5 shadow-lg position-relative overflow-hidden">
-        <div class="position-relative z-1">
+
+    {{-- 1. HERO SECTION: Split Layout --}}
+    <div class="bg-dark text-white rounded-3 p-4 mb-5 shadow-lg d-flex justify-content-between align-items-center overflow-hidden">
+
+        {{-- Bagian Kiri: Teks --}}
+        <div class="me-3">
             <h2 class="fw-bold mb-1">Halo, {{ Auth::user()->name }}! 👋</h2>
-            <p class="mb-0 opacity-75">Selamat datang di panel administrasi. Apa yang ingin Anda kelola hari ini?</p>
+            <p class="mb-0 opacity-75">Selamat datang di panel administrasi.</p>
         </div>
-        {{-- Hiasan Background Icon --}}
-        <i class="fas fa-user-shield fa-10x position-absolute top-50 end-0 translate-middle-y opacity-10 me-4"></i>
+
+        {{-- Bagian Kanan: Ikon Solid --}}
+        <div class="d-flex align-items-center justify-content-center text-secondary">
+            <i class="fas fa-user-shield fa-4x"></i>
+        </div>
+
     </div>
 
     {{-- 2. MENU UTAMA: Manajemen Data --}}
     <h5 class="fw-bold text-dark mb-3 ps-2 border-start border-4 border-primary">Manajemen Utama</h5>
     <div class="row g-4 mb-5">
-        
+
         {{-- Card: Daftar Kegiatan --}}
         <div class="col-md-6 col-lg-4">
             <a href="{{ route('admin.kegiatan.index') }}" class="card h-100 text-decoration-none shadow-sm border-0 hover-lift">
@@ -43,13 +49,13 @@
                     </div>
                     <div>
                         <h5 class="fw-bold text-dark mb-1">Buat Kegiatan</h5>
-                        <p class="text-muted small mb-0">Tambah acara, donasi, atau pengerahan relawan baru.</p>
+                        <p class="text-muted small mb-0">Tambah acara, donasi, atau relawan baru.</p>
                     </div>
                 </div>
             </a>
         </div>
 
-        {{-- Card: Manajemen Tags --}}
+        {{-- Card: Master Tag --}}
         <div class="col-md-6 col-lg-4">
             <a href="{{ route('admin.tags.index') }}" class="card h-100 text-decoration-none shadow-sm border-0 hover-lift">
                 <div class="card-body p-4 d-flex align-items-center">
@@ -64,7 +70,7 @@
             </a>
         </div>
 
-        {{-- Card: Manajemen Notifikasi (BARU DITAMBAHKAN) --}}
+        {{-- Card: Pusat Notifikasi --}}
         <div class="col-md-6 col-lg-4">
             <a href="{{ route('admin.notifikasi.index') }}" class="card h-100 text-decoration-none shadow-sm border-0 hover-lift">
                 <div class="card-body p-4 d-flex align-items-center">
@@ -79,7 +85,7 @@
             </a>
         </div>
 
-        {{-- Card: Manajemen User (BARU DITAMBAHKAN) --}}
+        {{-- Card: Kelola Pengguna --}}
         <div class="col-md-6 col-lg-4">
             <a href="{{ route('admin.users.index_admin_user') }}" class="card h-100 text-decoration-none shadow-sm border-0 hover-lift">
                 <div class="card-body p-4 d-flex align-items-center">
@@ -94,12 +100,28 @@
             </a>
         </div>
 
+        {{-- Card: Kelola Materi (BARU) --}}
+        <div class="col-md-6 col-lg-4">
+            <a href="{{ route('admin.materi.index') }}" class="card h-100 text-decoration-none shadow-sm border-0 hover-lift">
+                <div class="card-body p-4 d-flex align-items-center">
+                    {{-- Ikon Folder warna Ungu --}}
+                    <div class="bg-primary bg-opacity-25 text-primary rounded-circle p-3 me-3" style="color: #6f42c1 !important; background-color: rgba(111, 66, 193, 0.1) !important;">
+                        <i class="fas fa-folder-open fa-2x"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold text-dark mb-1">Materi & Dokumen</h5>
+                        <p class="text-muted small mb-0">Upload PDF, Gambar, atau Video.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
     </div>
 
     {{-- 3. MENU AKUN: Pengaturan Pribadi --}}
     <h5 class="fw-bold text-dark mb-3 ps-2 border-start border-4 border-secondary">Pengaturan Akun</h5>
     <div class="row g-4">
-        
+
         {{-- Card: Edit Profil --}}
         <div class="col-md-6 col-lg-4">
             <a href="{{ route('user.profile.edit') }}" class="card h-100 text-decoration-none shadow-sm border-0 hover-lift">
@@ -140,9 +162,10 @@
     .hover-lift {
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
+
     .hover-lift:hover {
         transform: translateY(-5px);
-        box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
+        box-shadow: 0 .5rem 1rem rgba(0, 0, 0, .15) !important;
     }
 </style>
 @endpush

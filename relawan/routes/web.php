@@ -9,6 +9,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\NotifikasiController;
 use App\Http\Controllers\PartisipasiController;
+use App\Http\Controllers\MateriController;
+use App\Http\Controllers\LaporanController;
 
 Route::get('/', function () {
     // 1. Cek apakah user SUDAH login?
@@ -61,6 +63,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/profil', [ProfileController::class, 'edit'])->name('user.profile.edit');
     Route::put('/profil', [ProfileController::class, 'update'])->name('user.profile.update');
 
+    // Route Index Materi untuk Relawan
+    Route::get('/materi', [MateriController::class, 'indexRelawan'])->name('materi.index');
+    // Route Show (Detail) yang sudah kita buat sebelumnya
+    Route::get('/materi/{id}', [MateriController::class, 'show'])->name('materi.show');
 
     // --- AREA KHUSUS ADMIN (DIPAGARI MIDDLEWARE 'admin') ---
     Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
@@ -90,6 +96,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/{id}', [UserController::class, 'show_admin_user'])->name('show_admin_user');
             Route::get('/{id}/tags', [UserController::class, 'edit_user_tags'])->name('tags.edit');
             Route::put('/{id}/tags', [UserController::class, 'update_user_tags'])->name('tags.update');
+            Route::put('/{id}/jabatan', [UserController::class, 'update_jabatan'])->name('update_jabatan');
         });
 
         // Manajemen Notifikasi
@@ -100,6 +107,14 @@ Route::middleware('auth')->group(function () {
             Route::get('/{id}/edit', [NotifikasiController::class, 'edit'])->name('edit');
             Route::put('/{id}', [NotifikasiController::class, 'update'])->name('update');
             Route::delete('/{id}', [NotifikasiController::class, 'destroy'])->name('destroy');
+        });
+
+        // Manajemen Materi
+        Route::resource('materi', MateriController::class);
+
+        Route::prefix('laporan')->name('laporan.')->group(function () {
+            Route::get('/', [LaporanController::class, 'index'])->name('index');
+            Route::get('/cetak-kegiatan', [LaporanController::class, 'cetakKegiatan'])->name('cetak_kegiatan');
         });
     });
 });

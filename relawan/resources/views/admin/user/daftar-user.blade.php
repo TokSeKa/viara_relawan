@@ -54,7 +54,11 @@
 
                             {{-- Role Badge --}}
                             <td>
-                                @if($user->jabatan == 'admin')
+                                @if($user->jabatan == 'blokir')
+                                <span class="badge bg-danger text-white border border-danger px-3 py-1 rounded-pill">
+                                    <i class="fas fa-user-shield me-1"></i> BLOKIR
+                                </span>
+                                @elseif($user->jabatan == 'admin')
                                 <span class="badge bg-dark text-white border border-dark px-3 py-1 rounded-pill">
                                     <i class="fas fa-user-shield me-1"></i> ADMIN
                                 </span>

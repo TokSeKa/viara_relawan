@@ -18,7 +18,11 @@ class AuthController extends Controller
     // Proses Register
     public function register(Request $request)
     {
-        // 1. Validasi (Sama kayak logic kamu sebelumnya)
+        // 1. Cek apakah ini User Pertama? (Genesis Logic)
+        // Jika 0 user, jadi 'admin'. Jika sudah ada user, jadi 'relawan'.
+        $role = User::count() === 0 ? 'admin' : 'relawan';
+
+        // 2. Validasi Input
         $validated = $request->validate([
             'name' => 'required',
             'email' => 'required|email|unique:users',
@@ -27,20 +31,30 @@ class AuthController extends Controller
             'jenis_kelamin' => 'required',
             'tanggal_lahir' => 'required|date',
             'alamat' => 'required',
-            'jabatan' => 'required' // Hidden field tadi
         ]);
 
-        // 2. Simpan ke Database
-        // Password wajib di-Hash!
+        // 3. Modifikasi Data sebelum Simpan
+        // Hash Password
         $validated['password'] = Hash::make($validated['password']);
 
+        // MASUKKAN ROLE KE ARRAY DATA
+        // Pastikan nama kolom di database kamu 'jabatan'
+        $validated['jabatan'] = $role;
+
+        // 4. Simpan ke Database
         $user = User::create($validated);
 
-        // 3. Auto Login setelah daftar (Opsional, biar UX enak)
+        // 5. Auto Login
         Auth::login($user);
 
-        // 4. Redirect ke Dashboard
-        return redirect()->route('dashboard')->with('success', 'Registrasi berhasil!');
+        // 6. Redirect Cerdas
+        // Kalau dia Admin (User 1), lempar ke Admin Dashboard
+        if ($user->jabatan == 'admin') {
+            return redirect()->route('admin.dashboard')->with('success', 'Selamat datang! Anda terdaftar sebagai Super Admin.');
+        }
+
+        // Kalau Relawan, lempar ke Dashboard Relawan
+        return redirect()->route('dashboard')->with('success', 'Registrasi berhasil! Selamat bergabung.');
     }
 
     // Tampilkan Form Login
@@ -65,6 +79,17 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $remember)) {
 
             $request->session()->regenerate();
+
+            // --- CEK BLOKIR SETELAH BERHASIL LOGIN ---
+            if (Auth::user()->jabatan == 'blokir') {
+                Auth::logout(); // Langsung logout lagi
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors([
+                    'email' => 'Email atau password salah.',
+                ]);
+            }
 
             // Cek Role buat redirect
             if (Auth::user()->jabatan == 'admin') {

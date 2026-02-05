@@ -8,6 +8,7 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Notifikasi;
+use App\Models\User;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -44,6 +45,18 @@ class AppServiceProvider extends ServiceProvider
                 // Kalau mau hitung yg belum dibaca (sementara kita anggap semua unread biar gampang)
                 $unreadCount = $notifikasis->count();
             }
+
+            $genesis = User::find(1);
+
+            $webProfile = (object) [
+                'name'  => $genesis ? $genesis->name : 'Viara Maitreyawira',
+                'email' => $genesis ? $genesis->email : 'info@viara.com',
+                'phone' => $genesis ? $genesis->no_hp : '0812-3456-7890',
+                'address' => $genesis ? $genesis->alamat : 'Batam, Indonesia',
+            ];
+
+            // Buat variabel $webProfile bisa dipakai dimanapun
+            $view->with('webProfile', $webProfile);
 
             // Kirim variabel $globalNotif dan $globalCount ke view
             $view->with('globalNotif', $notifikasis);

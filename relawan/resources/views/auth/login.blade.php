@@ -7,7 +7,7 @@
     <div class="row justify-content-center align-items-center" style="min-height: 80vh;">
         <div class="col-md-5">
             <div class="card shadow-lg border-0">
-                
+
                 {{-- Header Card --}}
                 <div class="card-header bg-dark text-white text-center py-4">
                     <h4 class="mb-0 fw-bold">
@@ -19,10 +19,10 @@
                 <div class="card-body p-4 bg-white">
                     {{-- Alert jika ada error login (email/password salah) --}}
                     @if($errors->any())
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="fas fa-exclamation-circle me-1"></i> Email atau password salah.
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="fas fa-exclamation-circle me-1"></i> Email atau password salah.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
                     @endif
 
                     <form method="POST" action="{{ route('login') }}">
@@ -33,12 +33,12 @@
                             <label for="email" class="form-label fw-bold">Alamat Email</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0"><i class="fas fa-envelope text-secondary"></i></span>
-                                <input type="email" class="form-control border-start-0 @error('email') is-invalid @enderror" 
-                                       id="email" name="email" value="{{ old('email') }}" required autofocus placeholder="Masukkan email kamu">
+                                <input type="email" class="form-control border-start-0 @error('email') is-invalid @enderror"
+                                    id="email" name="email" value="{{ old('email') }}" required autofocus placeholder="Masukkan email kamu">
                             </div>
                             {{-- Error validation per field --}}
                             @error('email')
-                                <small class="text-danger mt-1 d-block">{{ $message }}</small>
+                            <small class="text-danger mt-1 d-block">{{ $message }}</small>
                             @enderror
                         </div>
 
@@ -47,11 +47,11 @@
                             <label for="password" class="form-label fw-bold">Password</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0"><i class="fas fa-lock text-secondary"></i></span>
-                                <input type="password" class="form-control border-start-0 @error('password') is-invalid @enderror" 
-                                       id="password" name="password" required placeholder="Masukkan password">
+                                <input type="password" class="form-control border-start-0 @error('password') is-invalid @enderror"
+                                    id="password" name="password" required placeholder="Masukkan password">
                             </div>
                             @error('password')
-                                <small class="text-danger mt-1 d-block">{{ $message }}</small>
+                            <small class="text-danger mt-1 d-block">{{ $message }}</small>
                             @enderror
                         </div>
 
@@ -82,7 +82,7 @@
                 </div>
 
             </div>
-            
+
             {{-- Link Kembali ke Home (Opsional) --}}
             <div class="text-center mt-3">
                 <a href="{{ url('/') }}" class="text-decoration-none text-muted small">
