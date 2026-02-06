@@ -100,7 +100,7 @@
             </a>
         </div>
 
-        {{-- Card: Kelola Materi (BARU) --}}
+        {{-- Card: Kelola Materi --}}
         <div class="col-md-6 col-lg-4">
             <a href="{{ route('admin.materi.index') }}" class="card h-100 text-decoration-none shadow-sm border-0 hover-lift">
                 <div class="card-body p-4 d-flex align-items-center">
@@ -111,6 +111,22 @@
                     <div>
                         <h5 class="fw-bold text-dark mb-1">Materi & Dokumen</h5>
                         <p class="text-muted small mb-0">Upload PDF, Gambar, atau Video.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        {{-- Card: Pusat Laporan --}}
+        <div class="col-md-6 col-lg-4">
+            <a href="{{ route('admin.laporan.index') }}" class="card h-100 text-decoration-none shadow-sm border-0 hover-lift">
+                <div class="card-body p-4 d-flex align-items-center">
+                    {{-- Warna Ungu Gelap/Indigo biar beda dan terlihat 'Resmi' --}}
+                    <div class="bg-dark bg-opacity-10 text-dark rounded-circle p-3 me-3">
+                        <i class="fas fa-file-contract fa-2x"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold text-dark mb-1">Pusat Laporan</h5>
+                        <p class="text-muted small mb-0">Akses semua jenis laporan & arsip.</p>
                     </div>
                 </div>
             </a>

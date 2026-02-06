@@ -4,19 +4,26 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Kegiatan;
+use App\Models\Tag;
 use App\Models\Partisipasi;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 class LaporanController extends Controller
 {
-    // 1. DASHBOARD LAPORAN (Halaman Pilih Periode/Jenis Laporan)
+    // 1. HALAMAN HUB / MENU UTAMA LAPORAN
     public function index()
     {
-        return view('admin.laporan.index');
+        return view('admin.laporan.index'); // Ini sekarang jadi menu navigasi
     }
 
-    // 2. PROSES CETAK / TAMPILKAN HASIL
+    // 2. HALAMAN FILTER REKAPITULASI
+    public function indexRekap()
+    {
+        return view('admin.laporan.filter-rekap');
+    }
+
+    // 3. PROSES CETAK / TAMPILKAN HASIL
     public function cetakKegiatan(Request $request)
     {
         // Validasi Input
@@ -48,37 +55,123 @@ class LaporanController extends Controller
         // Kirim data laporan & data request (untuk judul laporan) ke view
         return view('admin.laporan.cetak-kegiatan', compact('laporan', 'request'));
     }
-    // 2. CETAK LAPORAN KEGIATAN (Filter Tanggal)
-    public function cetakKegiatan1(Request $request)
+
+    // 4. PROSES CETAK / TAMPILKAN HASIL
+    public function cetakPesertaKegiatan(Request $request)
     {
+        // Validasi Input
         $request->validate([
-            'tgl_awal' => 'required|date',
+            'tgl_awal'  => 'required|date',
             'tgl_akhir' => 'required|date|after_or_equal:tgl_awal',
+            'status'    => 'nullable|string', // Buka, Tutup, Selesai, Semua
+            'jenis'     => 'nullable|string', // donasi_dana, acara, dll
         ]);
 
-        $laporan = Kegiatan::with('admin')
-            ->whereBetween('tanggal_mulai', [$request->tgl_awal, $request->tgl_akhir])
-            ->get();
+        // Mulai Query
+        // with('detail') penting agar data polimorfik (anaknya) terambil
+        $query = Kegiatan::with(['admin', 'detail'])
+            ->whereBetween('tanggal_mulai', [$request->tgl_awal . ' 00:00:00', $request->tgl_akhir . ' 23:59:59']);
 
-        // return view('admin.laporan.cetak-kegiatan', compact('laporan'));
-        // Atau download PDF nanti
+        // Filter Status (Jika user tidak pilih 'semua')
+        if ($request->has('status') && $request->status != 'semua') {
+            $query->where('status', $request->status);
+        }
+
+        // Filter Jenis Detail (Jika user tidak pilih 'semua')
+        if ($request->has('jenis') && $request->jenis != 'semua') {
+            $query->where('detail_type', $request->jenis);
+        }
+
+        // Eksekusi Query
+        $laporan = $query->orderBy('tanggal_mulai', 'asc')->get();
+
+        // Kirim data laporan & data request (untuk judul laporan) ke view
+        return view('admin.laporan.cetak-kegiatan', compact('laporan', 'request'));
     }
 
-    // 3. CETAK LAPORAN RELAWAN AKTIF
-    public function cetakRelawan1()
+    // 5. HALAMAN PILIH KEGIATAN (Untuk Laporan Peserta)
+    public function indexPeserta()
     {
-        // Contoh logika: Relawan dengan poin partisipasi tertinggi
-        $relawans = User::where('jabatan', 'relawan')
-            ->withCount('partisipasi') // Hitung berapa kali ikut kegiatan
-            ->orderBy('partisipasi_count', 'desc')
-            ->limit(50)
+        // Ambil list kegiatan untuk dropdown
+        // Diurutkan dari yang terbaru biar gampang nyarinya
+        $kegiatans = Kegiatan::orderBy('tanggal_mulai', 'desc')->get();
+
+        return view('admin.laporan.index-peserta', compact('kegiatans'));
+    }
+
+    // 6. PROSES CETAK DAFTAR PESERTA
+    public function cetakPeserta(Request $request)
+    {
+        $request->validate([
+            'kegiatan_id' => 'required|exists:kegiatans,id',
+        ]);
+
+        // Ambil 1 Kegiatan Full dengan:
+        // - Detail (polimorfik)
+        // - Partisipasi -> User (si relawannya)
+        $kegiatan = Kegiatan::with(['detail', 'partisipasis.user'])
+            ->findOrFail($request->kegiatan_id);
+
+        return view('admin.laporan.cetak-peserta', compact('kegiatan'));
+    }
+
+    // 7. HALAMAN FILTER RELAWAN (Berdasarkan Tag)
+    public function indexRelawan()
+    {
+        // Ambil semua tag untuk dijadikan pilihan filter
+        $tags = Tag::orderBy('nama_tag', 'asc')->get();
+        return view('admin.laporan.index-relawan', compact('tags'));
+    }
+
+    // 8. PROSES CETAK RELAWAN POTENSIAL
+    public function cetakRelawan(Request $request)
+    {
+        $request->validate([
+            'tags' => 'nullable|array',
+            'tags.*' => 'exists:tags,id',
+        ]);
+
+        $query = User::where('jabatan', 'relawan')
+            ->with('tags')
+            ->withCount('partisipasis as partisipasi_count');
+
+        // Filter Tag
+        if ($request->has('tags') && count($request->tags) > 0) {
+            $query->whereHas('tags', function ($q) use ($request) {
+                $q->whereIn('tags.id', $request->tags);
+            });
+        }
+
+        // SORTING: Sesuaikan nama dengan alias di atas (partisipasi_count)
+        $relawans = $query->orderBy('partisipasi_count', 'desc')
+            ->orderBy('name', 'asc')
             ->get();
 
-        // return view('admin.laporan.cetak-relawan', compact('relawans'));
+        $selectedTags = $request->has('tags')
+            ? Tag::whereIn('id', $request->tags)->pluck('nama_tag')->toArray()
+            : [];
+
+        return view('admin.laporan.cetak-relawan', compact('relawans', 'selectedTags'));
+    }
+
+    // 9. CETAK LAPORAN STATISTIK TAG (MINAT)
+    public function cetakTag()
+    {
+        // Ambil Tag + Hitung Usernya
+        $tags = Tag::withCount('users') // Menghasilkan kolom 'users_count'
+            ->orderBy('users_count', 'desc') // Urutkan dari yang paling banyak
+            ->get();
+
+        // Menghitung Total User (untuk persentase bar chart sederhana)
+        $totalRelawan = User::where('jabatan', 'relawan')->count();
+
+        return view('admin.laporan.cetak-tag', compact('tags', 'totalRelawan'));
     }
 
     // jenis laporan yg mau kubuat:
     // 1. laporan kegiatan (berdasarkan periode) || filter berdasarkan status || bisa cetak pdf
     // 2. laporan relawan (berdasarkan periode) || bisa cetak pdf || relawan yg paling banyak parsipasi? tag yg paling banyak dipakai?
     // 3. laporan tag? tag yg paling banyak dipakai? tag yg paling banyak ikut kegiatan? tag yg paling banyak ikut kegiatan relawan tertentu? tag yg paling banyak ikut kegiatan kategori tertentu? 
+
+
 }

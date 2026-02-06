@@ -113,8 +113,23 @@ Route::middleware('auth')->group(function () {
         Route::resource('materi', MateriController::class);
 
         Route::prefix('laporan')->name('laporan.')->group(function () {
+            // 1. HUB / NAVIGASI UTAMA LAPORAN
             Route::get('/', [LaporanController::class, 'index'])->name('index');
+
+            // 2. LAPORAN REKAPITULASI (Filter Tanggal/Status)
+            Route::get('/rekap', [LaporanController::class, 'indexRekap'])->name('rekap'); // Route Baru
             Route::get('/cetak-kegiatan', [LaporanController::class, 'cetakKegiatan'])->name('cetak_kegiatan');
+
+            // 3. LAPORAN PESERTA (Pilih Kegiatan)
+            Route::get('/peserta', [LaporanController::class, 'indexPeserta'])->name('index_peserta');
+            Route::get('/cetak-peserta', [LaporanController::class, 'cetakPeserta'])->name('cetak_peserta');
+
+            // 4. LAPORAN POTENSI RELAWAN (Filter Tag)
+            Route::get('/relawan', [LaporanController::class, 'indexRelawan'])->name('index_relawan');
+            Route::get('/cetak-relawan', [LaporanController::class, 'cetakRelawan'])->name('cetak_relawan');
+
+            // 5. LAPORAN STATISTIK TAG
+            Route::get('/cetak-tag', [LaporanController::class, 'cetakTag'])->name('cetak_tag');
         });
     });
 });
