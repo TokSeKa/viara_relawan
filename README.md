@@ -124,24 +124,25 @@ Relawan memiliki akses untuk berpartisipasi dan mengelola profil diri.
 
 ---
 
-## 🛠️ Instalasi (Quick Start)
+## 🛠️ Instalasi & Setup (Quick Start)
 
-Jika baru pertama kali clone di VPS/Lokal:
+Langkah-langkah untuk menjalankan project ini di local/VPS setelah melakukan `git clone`:
 
 ```bash
-# 1. Install Dependencies
+# 1. Install Dependencies (Backend & Frontend)
 composer install
 npm install && npm run build
 
 # 2. Setup Environment
 cp .env.example .env
 php artisan key:generate
+# 🛑 STOP DULU: Buka file .env, atur nama database (DB_DATABASE), username, dan password.
 
-# 3. Setup Database & Isi Data Awal
+# 3. Setup Database
 php artisan migrate:fresh
-# (Jalankan Query Insert SQL yang sudah disediakan terpisah untuk dummy data)
+# 📝 Catatan: Jika punya file dump SQL (dummy data), import manual via phpMyAdmin setelah langkah ini.
 
-# 4. Storage Link (Penting untuk gambar banner/materi)
+# 4. Setup Storage Link (Wajib untuk Foto/Audio)
 php artisan storage:link
 
 # 5. Jalankan Server
