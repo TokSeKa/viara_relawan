@@ -4,19 +4,21 @@ Dokumen ini berisi informasi kredensial login, alur navigasi (routing), dan daft
 
 ---
 
-## 🔐 1. Akun Login & Kredensial
+## 🔐 1. Akun Login & Kredensial (Testing)
 
-Gunakan akun berikut untuk mengakses sistem. Semua password diseragamkan untuk kemudahan testing.
+Berikut adalah daftar akun dummy yang tersedia setelah menjalankan seed database.
+**Password untuk semua akun:** `12345678`
 
-| Role | Email | Password | Keterangan |
-| --- | --- | --- | --- |
-| **Super Admin** | `maitreyawira@gmail.com` | `12345678` | Akun Pemilik / Yayasan Utama |
-| **Bot Admin** | `admin@test.com` | `12345678` | Akun Bot untuk Testing fitur Admin |
-| **Bot Relawan** | `relawan@test.com` | `12345678` | Akun Bot untuk Testing fitur Relawan |
-| **Relawan User** | *email_user@gmail.com* | `12345678` | Akun simulasi user biasa |
+| Role | Email | Spesialisasi / Keterangan |
+| :--- | :--- | :--- |
+| **Super Admin** | `maitreyawira@gmail.com` | **Akses Penuh** (Yayasan Utama/Pemilik) |
+| **Bot Admin** | `admin@test.com` | Akun Bot untuk Testing fitur Admin Umum |
+| **Admin Logistik**| `logistik@viara.com` | Khusus Manajemen Barang & Gudang |
+| **Admin Acara** | `acara@viara.com` | Khusus Manajemen Event/Kegiatan |
+| **Bot Relawan** | `relawan@test.com` | Akun Bot untuk Testing fitur Relawan |
+| **Relawan User** | `email_user@gmail.com` | Simulasi User Biasa (Nama: Dylan) |
 
-> **Catatan:** Password hash default database: `$2y$12$9wCXx7CGn76Grv4Arp65gOUh0hVmsZzONHZel6Rp0KDYgi8TAsQ/K`
-
+> **Catatan:** Password menggunakan Hash Bcrypt standar Laravel. Jika ingin mengubah password, silakan edit file `database/seeders/UserSeeder.php` lalu jalankan `php artisan db:seed`.
 ---
 
 ## 🚦 2. Alur Akses Utama (Routing Logic)
