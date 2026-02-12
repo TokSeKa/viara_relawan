@@ -180,26 +180,48 @@ class NotifikasiController extends Controller
         }
     }
 
-    public function checkNew(Request $request)
+    public function checkCount()
     {
-        $user = Auth::user();
-
-        // Filter: Hanya notifikasi yang dibuat 10 detik terakhir
-        // Kenapa 10 detik? Karena JS kita nanti akan mengecek setiap 5-10 detik.
-        $newNotif = Notifikasi::forUser($user)
-            ->where('created_at', '>', now()->subSeconds(12))
-            ->orderBy('created_at', 'desc')
-            ->first();
-
-        if ($newNotif) {
-            return response()->json([
-                'status' => 'found',
-                'title' => $newNotif->judul,
-                'message' => $newNotif->pesan,
-                'type' => $newNotif->type // info, success, warning, dll
-            ]);
+        // 1. Cek Login
+        if (!Auth::check()) {
+            return response()->json(['count' => 0]);
         }
 
-        return response()->json(['status' => 'empty']);
+        $user = Auth::user();
+
+        // 2. Ambil Tag User
+        // Pastikan user punya relasi tags, jika tidak kasih array kosong
+        $userTagIds = $user->tags ? $user->tags->pluck('id')->toArray() : [];
+
+        // 3. Query Hitung Total (Copy-paste logic dari Blade agar sinkron)
+        $count = Notifikasi::query()
+            ->where(function ($q) {
+                // Filter Waktu: Belum kadaluarsa
+                $q->where('expires_at', '>', now())
+                    ->orWhereNull('expires_at');
+            })
+            ->where(function ($q) use ($userTagIds) {
+                // A. Notif Umum
+                $q->where('target_audience', 'all')
+
+                    // B. Notif Sesuai Minat (Tag)
+                    ->orWhere(function ($sub) use ($userTagIds) {
+                        if (!empty($userTagIds)) {
+                            $sub->where('target_audience', 'tag')
+                                ->whereIn('tag_id', $userTagIds);
+                        }
+                    })
+
+                    // C. Notif Sesuai Kegiatan
+                    ->orWhere(function ($sub) {
+                        $sub->where('target_audience', 'kegiatan')
+                            ->whereNotNull('kegiatan_id');
+                    });
+            })
+            ->count();
+        // 4. Return Format JSON yang Benar
+        return response()->json([
+            'count' => $count
+        ]);
     }
 }

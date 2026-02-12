@@ -56,7 +56,7 @@ Route::middleware('auth')->group(function () {
     })->name('dashboard');
     
     // Tambahkan ini untuk polling notifikasi
-    Route::get('/notifikasi/check', [NotifikasiController::class, 'checkNew'])->name('notifikasi.check');
+    Route::get('/cek-notifikasi', [NotifikasiController::class, 'checkCount'])->name('notifikasi.check');
 
     Route::post('/join-kegiatan', [PartisipasiController::class, 'store'])->name('partisipasi.join');
     Route::delete('/leave-kegiatan', [PartisipasiController::class, 'destroy'])->name('partisipasi.leave');
