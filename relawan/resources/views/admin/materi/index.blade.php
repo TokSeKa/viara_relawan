@@ -60,15 +60,20 @@
                             {{-- KOLOM TIPE FILE (IKON) --}}
                             <td class="text-center">
                                 @php
-                                $ext = strtolower(pathinfo($materi->file_path, PATHINFO_EXTENSION));
-                                $icon = 'fa-file';
-                                $color = 'text-secondary';
+                                if($materi->file_path) {
+                                    $ext = strtolower(pathinfo($materi->file_path, PATHINFO_EXTENSION));
 
-                                if(in_array($ext, ['pdf'])) { $icon = 'fa-file-pdf'; $color = 'text-danger'; }
-                                elseif(in_array($ext, ['doc', 'docx'])) { $icon = 'fa-file-word'; $color = 'text-primary'; }
-                                elseif(in_array($ext, ['xls', 'xlsx'])) { $icon = 'fa-file-excel'; $color = 'text-success'; }
-                                elseif(in_array($ext, ['ppt', 'pptx'])) { $icon = 'fa-file-powerpoint'; $color = 'text-warning'; }
-                                elseif(in_array($ext, ['jpg', 'jpeg', 'png'])) { $icon = 'fa-image'; $color = 'text-info'; }
+                                    if(in_array($ext, ['pdf'])) { $icon = 'fa-file-pdf'; $color = 'text-danger'; }
+                                    elseif(in_array($ext, ['doc', 'docx'])) { $icon = 'fa-file-word'; $color = 'text-primary'; }
+                                    elseif(in_array($ext, ['xls', 'xlsx'])) { $icon = 'fa-file-excel'; $color = 'text-success'; }
+                                    elseif(in_array($ext, ['ppt', 'pptx'])) { $icon = 'fa-file-powerpoint'; $color = 'text-warning'; }
+                                    elseif(in_array($ext, ['jpg', 'jpeg', 'png'])) { $icon = 'fa-image'; $color = 'text-info'; }
+                                }else {
+                                    $icon = 'fa-link';
+                                    $color = 'text-primary';
+                                    $bg = 'bg-primary';
+                                    $ext = 'LINK';
+                                }
                                 @endphp
                                 {{-- Arahkan ke SHOW (Smart Preview) --}}
                                 <a href="{{ route('materi.show', $materi->id) }}" class="text-decoration-none" title="Lihat Preview">

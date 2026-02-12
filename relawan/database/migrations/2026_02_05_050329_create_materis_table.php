@@ -10,15 +10,16 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up()
-    {
-        Schema::create('materis', function (Blueprint $table) {
-            $table->id();
-            $table->string('judul');      // Nama Materi
-            $table->text('deskripsi')->nullable(); // Penjelasan singkat (opsional)
-            $table->string('file_path');  // Lokasi file PDF disimpan
-            $table->timestamps();
-        });
-    }
+{
+    Schema::create('materis', function (Blueprint $table) {
+        $table->id();
+        $table->string('judul');
+        $table->text('deskripsi')->nullable();
+        $table->string('file_path')->nullable(); // Menjadi nullable
+        $table->string('link')->nullable();      // Kolom baru untuk link
+        $table->timestamps();
+    });
+}
 
     /**
      * Reverse the migrations.

@@ -17,9 +17,7 @@ return new class extends Migration
             // Siapa & Kegiatan Apa
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('kegiatan_id')->constrained('kegiatans')->cascadeOnDelete();
-
-            // Data Fleksibel (Bukti TF, Plat Nomor, dll)
-            $table->json('data_tambahan')->nullable();
+            $table->text('catatan')->nullable();
 
             $table->timestamps(); // created_at = waktu join
         });

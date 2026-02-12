@@ -96,12 +96,18 @@
                                 @enderror
                             </div>
 
-                            {{-- 7. Tanggal Lahir --}}
+                            {{-- 7. Rentang Usia (Pengganti Tanggal Lahir) --}}
                             <div class="col-md-6">
-                                <label for="tanggal_lahir" class="form-label fw-bold">Tanggal Lahir</label>
-                                <input type="date" class="form-control @error('tanggal_lahir') is-invalid @enderror"
-                                    id="tanggal_lahir" name="tanggal_lahir" value="{{ old('tanggal_lahir') }}" required>
-                                @error('tanggal_lahir')
+                                <label for="usia_range" class="form-label fw-bold">Rentang Usia</label>
+                                <select class="form-select @error('usia_range') is-invalid @enderror" name="usia_range" required>
+                                    <option value="" disabled selected>-- Pilih Usia --</option>
+                                    <option value="< 17" {{ old('usia_range') == '< 17' ? 'selected' : '' }}>Di bawah 17 Tahun</option>
+                                    <option value="17-25" {{ old('usia_range') == '17-25' ? 'selected' : '' }}>17 - 25 Tahun</option>
+                                    <option value="26-35" {{ old('usia_range') == '26-35' ? 'selected' : '' }}>26 - 35 Tahun</option>
+                                    <option value="36-50" {{ old('usia_range') == '36-50' ? 'selected' : '' }}>36 - 50 Tahun</option>
+                                    <option value="> 50" {{ old('usia_range') == '> 50' ? 'selected' : '' }}>Di atas 50 Tahun</option>
+                                </select>
+                                @error('usia_range')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>

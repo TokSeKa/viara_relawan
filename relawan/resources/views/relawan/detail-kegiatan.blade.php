@@ -90,18 +90,14 @@
 
                     <hr class="border-secondary border-opacity-25">
 
-                    {{-- --- LOGIKA POLYMORPHIC: TAMPILKAN DETAIL SESUAI JENIS --- --}}
+                    {{-- --- LOGIKA POLYMORPHIC: DETAIL SESUAI JENIS --- --}}
 
-                    {{-- 1. JIKA DONASI DANA --}}
                     @if($kegiatan->detail_type == 'donasi_dana')
                     <h6 class="fw-bold mb-3"><i class="fas fa-hand-holding-usd me-2 text-success"></i> Informasi Donasi</h6>
-
-                    {{-- Progress Bar (Opsional logic) --}}
                     <div class="mb-3">
                         <small class="text-muted d-block mb-1">Target Dana</small>
                         <h4 class="fw-bold text-success">Rp {{ number_format($kegiatan->detail->target_rupiah, 0, ',', '.') }}</h4>
                     </div>
-
                     <div class="alert alert-light border">
                         <small class="fw-bold d-block mb-2 text-muted">Rekening Transfer:</small>
                         @foreach($kegiatan->detail->info_bank as $bank)
@@ -113,15 +109,12 @@
                         @endforeach
                     </div>
 
-                    {{-- 2. JIKA DONASI DARAH --}}
                     @elseif($kegiatan->detail_type == 'donasi_darah')
                     <h6 class="fw-bold mb-3"><i class="fas fa-heartbeat me-2 text-danger"></i> Informasi Donor</h6>
-
                     <div class="mb-3">
                         <label class="small text-muted">Target Kantong</label>
                         <div class="fs-4 fw-bold">{{ $kegiatan->detail->target_kantong }} Kantong</div>
                     </div>
-
                     <div class="mb-3">
                         <label class="small text-muted">Golongan Darah Dibutuhkan</label>
                         <div class="d-flex flex-wrap gap-1 mt-1">
@@ -130,16 +123,13 @@
                             @endforeach
                         </div>
                     </div>
-
                     <div class="mb-3">
                         <label class="small text-muted"><i class="fas fa-map-marker-alt me-1"></i> Lokasi PMI</label>
                         <p class="fw-bold mb-0">{{ $kegiatan->detail->lokasi_pmi }}</p>
                     </div>
 
-                    {{-- 3. JIKA MOBIL --}}
                     @elseif($kegiatan->detail_type == 'mobil')
-                    <h6 class="fw-bold mb-3"><i class="fas fa-truck-pickup me-2 text-info"></i> Peminjaman Mobil</h6>
-
+                    <h6 class="fw-bold mb-3"><i class="fas fa-truck-pickup me-2 text-info"></i> Logistik Transport</h6>
                     <div class="row text-center mb-3">
                         <div class="col-6">
                             <div class="border rounded p-2">
@@ -150,42 +140,64 @@
                         <div class="col-6">
                             <div class="border rounded p-2">
                                 <small class="text-muted d-block">Supir</small>
-                                <span class="fw-bold fs-5">
-                                    {{ $kegiatan->detail->butuh_supir ? 'Ya' : 'Tidak' }}
-                                </span>
+                                <span class="fw-bold fs-5">{{ $kegiatan->detail->butuh_supir ? 'Ya' : 'Tidak' }}</span>
                             </div>
                         </div>
                     </div>
-
                     <div class="mb-3">
                         <label class="small text-muted"><i class="fas fa-map-pin me-1"></i> Titik Penjemputan</label>
                         <p class="fw-bold mb-0">{{ $kegiatan->detail->lokasi_jemput }}</p>
                     </div>
 
-                    {{-- 4. JIKA ACARA --}}
                     @elseif($kegiatan->detail_type == 'acara')
                     <h6 class="fw-bold mb-3"><i class="fas fa-calendar-check me-2 text-primary"></i> Detail Acara</h6>
-
                     <div class="mb-3">
                         <label class="small text-muted">Kuota Peserta</label>
-                        <div class="fs-4 fw-bold text-dark">
-                            {{ $kegiatan->detail->kuota_peserta > 0 ? $kegiatan->detail->kuota_peserta . ' Orang' : 'Tanpa Batas' }}
-                        </div>
+                        <div class="fs-4 fw-bold text-dark">{{ $kegiatan->detail->kuota_peserta > 0 ? $kegiatan->detail->kuota_peserta . ' Orang' : 'Tanpa Batas' }}</div>
                     </div>
-
                     <div class="mb-3">
                         <label class="small text-muted"><i class="fas fa-map-marked-alt me-1"></i> Lokasi Acara</label>
                         <p class="fw-bold mb-0">{{ $kegiatan->detail->lokasi }}</p>
                     </div>
 
+                    {{-- 5. BARU: DONASI BARANG --}}
+                    @elseif($kegiatan->detail_type == 'donasi_barang')
+                    <h6 class="fw-bold mb-3"><i class="fas fa-box-open me-2 text-info"></i> Donasi Barang</h6>
+                    <div class="mb-3">
+                        <label class="small text-muted">Barang yang Dibutuhkan</label>
+                        <div class="fs-5 fw-bold text-info">{{ $kegiatan->detail->target_item }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small text-muted">Target Jumlah</label>
+                        <div class="fs-4 fw-bold">{{ $kegiatan->detail->target_jumlah }} Item</div>
+                    </div>
+                    <div class="alert alert-info py-2">
+                        <label class="small fw-bold d-block"><i class="fas fa-warehouse me-1"></i> Lokasi Pengumpulan:</label>
+                        <p class="small mb-0">{{ $kegiatan->detail->lokasi_kumpul }}</p>
+                    </div>
+
+                    {{-- 6. BARU: PEMINJAMAN BARANG --}}
+                    @elseif($kegiatan->detail_type == 'peminjaman_barang')
+                    <h6 class="fw-bold mb-3"><i class="fas fa-tools me-2 text-secondary"></i> Peminjaman Barang</h6>
+                    <div class="mb-3">
+                        <label class="small text-muted">Nama Barang</label>
+                        <div class="fs-5 fw-bold">{{ $kegiatan->detail->nama_barang }}</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="small text-muted">Stok Tersedia</label>
+                        <div class="fs-4 fw-bold text-dark">{{ $kegiatan->detail->stok_tersedia }} Unit</div>
+                    </div>
+                    @if($kegiatan->detail->persyaratan)
+                    <div class="bg-light p-3 rounded border">
+                        <label class="small fw-bold d-block mb-1 text-muted">Persyaratan Pinjam:</label>
+                        <div class="small text-secondary">{{ $kegiatan->detail->persyaratan }}</div>
+                    </div>
+                    @endif
                     @endif
 
                     <hr>
-
-                    {{-- TOMBOL AKSI --}}
-                    {{-- Cek apakah user sudah join atau belum --}}
+                    {{-- TOMBOL AKSI & LOGIKA JOIN --}}
                     @php
-                    // Cek di database apakah user auth sudah ada di tabel partisipasi kegiatan ini
                     $isJoined = \App\Models\Partisipasi::where('user_id', Auth::id())
                     ->where('kegiatan_id', $kegiatan->id)
                     ->exists();
@@ -193,55 +205,59 @@
 
                     @auth
                     @if($isJoined)
-                    {{-- JIKA SUDAH JOIN: Tampilkan Tombol Batal --}}
                     <div class="alert alert-success text-center py-2 mb-2 small">
-                        <i class="fas fa-check-circle"></i> Anda terdaftar sebagai relawan.
+                        <i class="fas fa-check-circle"></i> Anda sudah terdaftar.
                     </div>
-
-                    {{-- HAPUS --}}
                     <form action="{{ route('partisipasi.leave') }}" method="POST">
-                        @csrf
-                        @method('DELETE')
+                        @csrf @method('DELETE')
                         <input type="hidden" name="kegiatan_id" value="{{ $kegiatan->id }}">
-
                         <button type="submit" class="btn btn-outline-danger w-100 fw-bold py-2">
                             <i class="fas fa-times me-2"></i> BATALKAN PARTISIPASI
                         </button>
                     </form>
-
                     @else
-                    {{-- JIKA BELUM JOIN: Tampilkan Tombol Daftar --}}
-                    <form action="{{ route('partisipasi.join') }}" method="POST">
-                        @csrf
-                        <input type="hidden" name="kegiatan_id" value="{{ $kegiatan->id }}">
-
-                        {{-- Disable tombol jika status bukan 'buka' --}}
-                        @if($kegiatan->status == 'buka')
-                        <button type="submit" class="btn btn-warning w-100 fw-bold py-2 shadow-sm">
-                            <i class="fas fa-hand-paper me-2"></i> GABUNG JADI RELAWAN
-                        </button>
-                        @else
-                        <button type="button" class="btn btn-secondary w-100 fw-bold py-2" disabled>
-                            PENDAFTARAN DITUTUP
-                        </button>
-                        @endif
-                    </form>
+                    @if($kegiatan->status == 'buka')
+                    <button type="button" class="btn btn-warning w-100 fw-bold py-2 shadow-sm text-dark" data-bs-toggle="modal" data-bs-target="#modalJoin">
+                        <i class="fas fa-hand-paper me-2"></i> GABUNG JADI RELAWAN
+                    </button>
+                    @else
+                    <button type="button" class="btn btn-secondary w-100 fw-bold py-2" disabled>PENDAFTARAN DITUTUP</button>
                     @endif
-
+                    @endif
                     @else
-                    {{-- Kalau belum login --}}
-                    <a href="{{ route('login') }}" class="btn btn-outline-dark w-100 fw-bold">
-                        LOGIN UNTUK BERGABUNG
-                    </a>
+                    <a href="{{ route('login') }}" class="btn btn-outline-dark w-100 fw-bold">LOGIN UNTUK BERGABUNG</a>
                     @endauth
-
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-{{-- CSS Tambahan Kecil --}}
+{{-- MODAL JOIN DENGAN CATATAN --}}
+<div class="modal fade" id="modalJoin" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-warning">
+                <h5 class="modal-title fw-bold text-dark">Konfirmasi Bergabung</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ route('partisipasi.join') }}" method="POST">
+                @csrf
+                <input type="hidden" name="kegiatan_id" value="{{ $kegiatan->id }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Catatan Keterangan (Opsional)</label>
+                        <textarea name="catatan" class="form-control" rows="3" placeholder="Contoh: Saya akan bawa barang jam 4 sore, atau Saya siap membantu angkut barang."></textarea>
+                        <div class="form-text small">Admin akan melihat catatan ini di daftar peserta.</div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-link text-secondary text-decoration-none" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-warning fw-bold px-4">YA, GABUNG SEKARANG</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 @push('styles')
 <style>
     .last-no-border:last-child {
@@ -251,5 +267,4 @@
     }
 </style>
 @endpush
-
 @endsection

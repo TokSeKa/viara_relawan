@@ -53,22 +53,29 @@
 
                         {{-- 3. INPUT FILE (UNIVERSAL) --}}
                         <div class="mb-4">
-                            <label class="form-label fw-bold">Pilih File</label>
-                            <div class="p-4 bg-light border border-dashed rounded text-center">
-                                <i class="fas fa-file-import fa-3x text-secondary mb-3"></i>
-
-                                <input type="file" name="file_materi" class="form-control" required>
-
-                                <div class="form-text mt-2 text-muted">
-                                    <small>
-                                        <i class="fas fa-info-circle me-1"></i>
-                                        Format yang didukung: <strong>PDF, Word, Excel, PPT, Gambar, Audio, Video</strong>.
-                                        <br>Maksimal ukuran: <strong>20MB</strong>.
-                                    </small>
+                            <label class="form-label fw-bold">Konten Materi</label>
+                            <div class="row g-3">
+                                {{-- Opsi A: File --}}
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-light border rounded h-100">
+                                        <label class="small fw-bold mb-2"><i class="fas fa-file-upload me-1"></i> Upload File</label>
+                                        <input type="file" name="file_materi" class="form-control form-control-sm">
+                                        <div class="form-text mt-1" style="font-size: 0.75rem;">PDF, Office, Gambar, dll. (Max 20MB)</div>
+                                    </div>
+                                </div>
+                                {{-- Opsi B: Link --}}
+                                <div class="col-md-6">
+                                    <div class="p-3 bg-light border rounded h-100">
+                                        <label class="small fw-bold mb-2"><i class="fas fa-link me-1"></i> Link Eksternal</label>
+                                        <input type="url" name="link" class="form-control form-control-sm" placeholder="https://youtube.com/..." value="{{ old('link') }}">
+                                        <div class="form-text mt-1" style="font-size: 0.75rem;">Link YouTube, Drive, atau Website lain.</div>
+                                    </div>
                                 </div>
                             </div>
+                            <div class="alert alert-info py-2 px-3 mt-3 mb-0" style="font-size: 0.8rem;">
+                                <i class="fas fa-info-circle me-1"></i> <strong>Tips:</strong> Anda bisa mengisi salah satu atau keduanya (File + Link pendukung).
+                            </div>
                         </div>
-
                         {{-- --- PILIH TAG --- --}}
                         <div class="mb-4">
                             <label class="form-label fw-bold"><i class="fas fa-tags me-1"></i> Label / Tag Materi</label>

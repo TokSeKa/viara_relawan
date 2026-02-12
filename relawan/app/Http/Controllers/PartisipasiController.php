@@ -14,16 +14,16 @@ class PartisipasiController extends Controller
      */
     public function store(Request $request)
     {
-        // 1. Validasi Input
+        // 1. Validasi Input (Tambah validasi catatan)
         $request->validate([
             'kegiatan_id' => 'required|exists:kegiatans,id',
+            'catatan'     => 'nullable|string|max:1000',
         ]);
 
         $user = Auth::user();
         $kegiatanId = $request->kegiatan_id;
 
         // 2. Cek Validasi Logika Bisnis
-        // A. Cek apakah user SUDAH pernah join?
         $existing = Partisipasi::where('user_id', $user->id)
             ->where('kegiatan_id', $kegiatanId)
             ->first();
@@ -32,7 +32,6 @@ class PartisipasiController extends Controller
             return back()->with('error', 'Anda sudah terdaftar di kegiatan ini!');
         }
 
-        // B. Cek apakah kegiatan masih BUKA?
         $kegiatan = Kegiatan::find($kegiatanId);
         if ($kegiatan->status !== 'buka') {
             return back()->with('error', 'Maaf, pendaftaran kegiatan ini sudah ditutup.');
@@ -40,12 +39,12 @@ class PartisipasiController extends Controller
 
         // 3. Simpan Data (Join)
         Partisipasi::create([
-            'user_id'       => $user->id,
-            'kegiatan_id'   => $kegiatanId,
-            'data_tambahan' => null, // Nanti bisa diisi array/json jika butuh input khusus
+            'user_id'     => $user->id,
+            'kegiatan_id' => $kegiatanId,
+            'catatan'     => $request->catatan, // <-- Simpan Catatan Disini
         ]);
 
-        return back()->with('success', 'Berhasil bergabung sebagai relawan!');
+        return back()->with('success', 'Berhasil bergabung! Catatan Anda telah disimpan.');
     }
 
     /**

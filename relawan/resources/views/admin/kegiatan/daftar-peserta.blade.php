@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="container pb-5">
-    
+
     {{-- Header & Tombol Kembali --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -24,15 +24,15 @@
     <div class="card shadow-sm border-0">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
             <span class="fw-bold text-dark">Total Peserta: {{ $kegiatan->partisipasis->count() }} Orang</span>
-            
+
             {{-- Badge Status Kegiatan --}}
-            @if($kegiatan->status == 'buka') 
-                <span class="badge bg-success">Pendaftaran Buka</span>
-            @else 
-                <span class="badge bg-secondary">Pendaftaran Tutup</span>
+            @if($kegiatan->status == 'buka')
+            <span class="badge bg-success">Pendaftaran Buka</span>
+            @else
+            <span class="badge bg-secondary">Pendaftaran Tutup</span>
             @endif
         </div>
-        
+
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover table-striped align-middle mb-0">
@@ -44,60 +44,75 @@
                             <th class="py-3">Usia</th>
                             <th class="py-3">No. Handphone</th>
                             <th class="py-3">Alamat Domisili</th>
+                            <th class="py-3" width="25%">Catatan Relawan</th>
                             <th class="py-3">Tanggal Join</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($kegiatan->partisipasis as $index => $partisipasi)
-                            <tr>
-                                <td class="px-4 fw-bold">{{ $index + 1 }}</td>
-                                
-                                {{-- Nama --}}
-                                <td class="fw-bold text-dark">
-                                    {{ $partisipasi->user->name }}
-                                </td>
+                        <tr>
+                            <td class="px-4 fw-bold">{{ $index + 1 }}</td>
 
-                                {{-- Gender --}}
-                                <td>
-                                    @if($partisipasi->user->jenis_kelamin == 'laki-laki')
-                                        <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill">Laki-laki</span>
-                                    @else
-                                        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-pill">Perempuan</span>
-                                    @endif
-                                </td>
+                            {{-- Nama --}}
+                            <td class="fw-bold text-dark">
+                                {{ $partisipasi->user->name }}
+                            </td>
 
-                                {{-- Usia (Hitung dari Tanggal Lahir) --}}
-                                <td>
-                                    {{ \Carbon\Carbon::parse($partisipasi->user->tanggal_lahir)->age }} Tahun
-                                </td>
+                            {{-- Gender --}}
+                            <td>
+                                @if($partisipasi->user->jenis_kelamin == 'laki-laki')
+                                <span class="badge bg-info bg-opacity-10 text-info border border-info rounded-pill">Laki-laki</span>
+                                @else
+                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger rounded-pill">Perempuan</span>
+                                @endif
+                            </td>
 
-                                {{-- No HP --}}
-                                <td>
-                                    {{ $partisipasi->user->no_hp }}
-                                </td>
+                            {{-- Usia (Hitung dari Tanggal Lahir) --}}
+                            <td>
+                                {{ \Carbon\Carbon::parse($partisipasi->user->tanggal_lahir)->age }} Tahun
+                            </td>
 
-                                {{-- Alamat --}}
-                                <td>
-                                    <span class="d-inline-block text-truncate" style="max-width: 200px;" title="{{ $partisipasi->user->alamat }}">
-                                        {{ $partisipasi->user->alamat }}
-                                    </span>
-                                </td>
+                            {{-- No HP --}}
+                            <td>
+                                {{ $partisipasi->user->no_hp }}
+                            </td>
 
-                                {{-- Tanggal Join --}}
-                                <td class="text-muted small">
-                                    {{ $partisipasi->created_at->format('d M Y H:i') }}
-                                </td>
-                            </tr>
+                            {{-- Alamat --}}
+                            <td>
+                                <span class="d-inline-block text-truncate" style="max-width: 200px;" title="{{ $partisipasi->user->alamat }}">
+                                    {{ $partisipasi->user->alamat }}
+                                </span>
+                            </td>
+
+                            {{-- Kolom Catatan --}}
+                            <td style="vertical-align: top;">
+                                @if($partisipasi->catatan)
+                                <div class="p-2 bg-warning bg-opacity-10 border border-warning rounded small text-dark text-wrap"
+                                    style="max-width: 250px; word-break: break-word; line-height: 1.5;">
+                                    <i class="fas fa-comment-alt me-1 text-warning"></i>
+                                    {{-- nl2br untuk menjaga line-break manual, e() untuk keamanan --}}
+                                    {!! nl2br(e($partisipasi->catatan)) !!}
+                                </div>
+                                @else
+                                <span class="text-muted small fst-italic">- Tidak ada catatan -</span>
+                                @endif
+                            </td>
+
+                            {{-- Tanggal Join --}}
+                            <td class="text-muted small">
+                                {{ $partisipasi->created_at->format('d M Y H:i') }}
+                            </td>
+                        </tr>
                         @empty
-                            <tr>
-                                <td colspan="7" class="text-center py-5">
-                                    <div class="mb-2 text-muted opacity-25">
-                                        <i class="fas fa-user-slash fa-3x"></i>
-                                    </div>
-                                    <h6 class="fw-bold text-muted">Belum ada peserta</h6>
-                                    <p class="small text-muted mb-0">Peserta yang bergabung akan muncul di sini.</p>
-                                </td>
-                            </tr>
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <div class="mb-2 text-muted opacity-25">
+                                    <i class="fas fa-user-slash fa-3x"></i>
+                                </div>
+                                <h6 class="fw-bold text-muted">Belum ada peserta</h6>
+                                <p class="small text-muted mb-0">Peserta yang bergabung akan muncul di sini.</p>
+                            </td>
+                        </tr>
                         @endforelse
                     </tbody>
                 </table>

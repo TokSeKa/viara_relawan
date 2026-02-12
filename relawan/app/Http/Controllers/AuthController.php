@@ -18,27 +18,22 @@ class AuthController extends Controller
     // Proses Register
     public function register(Request $request)
     {
-        // 1. Cek apakah ini User Pertama? (Genesis Logic)
-        // Jika 0 user, jadi 'admin'. Jika sudah ada user, jadi 'relawan'.
-        $role = User::count() === 0 ? 'admin' : 'relawan';
+        // 1. Cek User Pertama: Jika database kosong, user pertama otomatis jadi 'admin_super'
+        $role = User::count() === 0 ? 'admin_super' : 'relawan';
 
         // 2. Validasi Input
         $validated = $request->validate([
-            'name' => 'required',
+            'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'password' => 'required|confirmed|min:6',
-            'no_hp' => 'required',
-            'jenis_kelamin' => 'required',
-            'tanggal_lahir' => 'required|date',
-            'alamat' => 'required',
+            'no_hp' => 'required|string',
+            'jenis_kelamin' => 'required|in:laki-laki,perempuan',
+            'usia_range' => 'required|string',
+            'alamat' => 'required|string',
         ]);
 
-        // 3. Modifikasi Data sebelum Simpan
-        // Hash Password
+        // 3. Modifikasi Data & Hash Password
         $validated['password'] = Hash::make($validated['password']);
-
-        // MASUKKAN ROLE KE ARRAY DATA
-        // Pastikan nama kolom di database kamu 'jabatan'
         $validated['jabatan'] = $role;
 
         // 4. Simpan ke Database
@@ -47,13 +42,14 @@ class AuthController extends Controller
         // 5. Auto Login
         Auth::login($user);
 
-        // 6. Redirect Cerdas
-        // Kalau dia Admin (User 1), lempar ke Admin Dashboard
-        if ($user->jabatan == 'admin') {
+        // 6. Redirect Berdasarkan Role
+        // Kita gunakan str_contains agar semua jenis admin (super, dana, mobil, dll) 
+        // diarahkan ke dashboard admin.
+        if (str_contains($user->jabatan, 'admin')) {
             return redirect()->route('admin.dashboard')->with('success', 'Selamat datang! Anda terdaftar sebagai Super Admin.');
         }
 
-        // Kalau Relawan, lempar ke Dashboard Relawan
+        // Jika Relawan biasa
         return redirect()->route('dashboard')->with('success', 'Registrasi berhasil! Selamat bergabung.');
     }
 
@@ -71,31 +67,26 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        // 1. TANGKAP INPUTAN CHECKBOX 'REMEMBER'
-        // $request->boolean('remember') otomatis mengembalikan true kalau dicentang, false kalau tidak.
         $remember = $request->boolean('remember');
 
-        // 2. MASUKKAN $remember SEBAGAI PARAMETER KEDUA
         if (Auth::attempt($credentials, $remember)) {
 
             $request->session()->regenerate();
 
-            // --- CEK BLOKIR SETELAH BERHASIL LOGIN ---
             if (Auth::user()->jabatan == 'blokir') {
-                Auth::logout(); // Langsung logout lagi
+                Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
 
                 return back()->withErrors([
-                    'email' => 'Email atau password salah.',
+                    'email' => 'Akun Anda diblokir. Hubungi admin.',
                 ]);
             }
 
-            // Cek Role buat redirect
-            if (Auth::user()->jabatan == 'admin') {
+            if (str_contains(Auth::user()->jabatan, 'admin')) {
                 return redirect()->intended('/admin/dashboard');
             }
-            return redirect()->route('dashboard')->with('success', 'Registrasi berhasil!');
+            return redirect()->route('dashboard')->with('success', 'Login Berhasil!');
         }
 
         return back()->withErrors([

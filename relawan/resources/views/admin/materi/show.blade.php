@@ -120,6 +120,34 @@
                         @endif
                     </div>
 
+                    {{-- Di dalam Card Body, setelah logika Smart Preview file --}}
+
+                    @if($materi->link)
+                    <div class="p-4 {{ $materi->file_path ? 'border-top bg-white' : '' }}">
+                        <div class="card border-primary bg-primary bg-opacity-10 py-4">
+                            <div class="card-body text-center">
+                                <i class="fas fa-external-link-alt fa-3x text-primary mb-3"></i>
+                                <h5 class="fw-bold">Link Materi Tersedia</h5>
+                                <p class="text-muted">Materi ini memiliki referensi link eksternal yang dapat Anda buka.</p>
+                                <a href="{{ $materi->link }}" target="_blank" class="btn btn-primary px-5 btn-lg rounded-pill fw-bold shadow-sm">
+                                    <i class="fas fa-share-square me-2"></i> KUNJUNGI LINK
+                                </a>
+                                <div class="mt-3 small text-muted">
+                                    URL: <span class="font-monospace">{{ $materi->link }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    {{-- Jika tidak ada file dan tidak ada link (safety check) --}}
+                    @if(!$materi->file_path && !$materi->link)
+                    <div class="py-5 text-center">
+                        <i class="fas fa-exclamation-circle fa-4x text-warning mb-3"></i>
+                        <h5>Tidak ada konten materi untuk ditampilkan.</h5>
+                    </div>
+                    @endif
+
                     {{-- TOMBOL DOWNLOAD & DESKRIPSI --}}
                     <div class="bg-white border-top p-4 text-start">
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">

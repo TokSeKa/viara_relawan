@@ -5,11 +5,11 @@
 @section('content')
 <div class="container pb-5">
 
-    {{-- 1. Header Hero Section Kecil & Search Bar --}}
+    {{-- 1. Header Hero Section --}}
     <div class="bg-primary bg-gradient text-white rounded-3 p-4 mb-5 shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-center">
         <div class="mb-3 mb-md-0">
             <h2 class="fw-bold mb-1">Ayo Beraksi!</h2>
-            <p class="mb-0 opacity-75">Temukan kegiatan sosial yang cocok dengan minatmu.</p>
+            <p class="mb-0 opacity-75">Temukan kegiatan sosial yang cocok dengan minat dan keahlianmu.</p>
         </div>
 
         <div class="d-flex align-items-center gap-3">
@@ -21,18 +21,17 @@
                 <input type="text" id="searchInput" class="form-control border-0 py-2" placeholder="Cari kegiatan..." style="min-width: 250px;">
             </div>
 
-            <i class="fas fa-people-carry fa-3x opacity-50 d-none d-lg-block ms-2"></i>
+            <i class="fas fa-hands-helping fa-3x opacity-50 d-none d-lg-block ms-2"></i>
         </div>
     </div>
 
     {{-- 2. Grid Kegiatan --}}
     <div class="row g-4" id="kegiatanGrid">
         @forelse($kegiatans as $kegiatan)
-        {{-- Tambahkan class 'kegiatan-item' untuk target search --}}
         <div class="col-md-6 col-lg-4 kegiatan-item">
             <div class="card h-100 shadow-sm border-0 hover-lift overflow-hidden">
 
-                {{-- Gambar Banner --}}
+                {{-- Gambar Banner & Badge Jenis --}}
                 <div class="position-relative">
                     @if($kegiatan->banner_image)
                     <img src="{{ asset('storage/' . $kegiatan->banner_image) }}" class="card-img-top" alt="{{ $kegiatan->judul }}" style="height: 200px; object-fit: cover;">
@@ -42,23 +41,27 @@
                     </div>
                     @endif
 
-                    <span class="position-absolute top-0 end-0 m-3 badge rounded-pill 
-                            {{ $kegiatan->detail_type == 'donasi_dana' ? 'bg-success' : '' }}
-                            {{ $kegiatan->detail_type == 'donasi_darah' ? 'bg-danger' : '' }}
-                            {{ $kegiatan->detail_type == 'mobil' ? 'bg-primary' : '' }}
-                            {{ $kegiatan->detail_type == 'acara' ? 'bg-warning text-dark' : '' }}
-                            shadow-sm">
+                    {{-- Badge Jenis Kegiatan --}}
+                    <span class="position-absolute top-0 end-0 m-3 badge rounded-pill shadow-sm
+                        {{ $kegiatan->detail_type == 'donasi_dana' ? 'bg-success' : '' }}
+                        {{ $kegiatan->detail_type == 'donasi_darah' ? 'bg-danger' : '' }}
+                        {{ $kegiatan->detail_type == 'mobil' ? 'bg-primary' : '' }}
+                        {{ $kegiatan->detail_type == 'acara' ? 'bg-warning text-dark' : '' }}
+                        {{ $kegiatan->detail_type == 'donasi_barang' ? 'bg-info' : '' }}
+                        {{ $kegiatan->detail_type == 'peminjaman_barang' ? 'bg-secondary' : '' }}">
 
-                        @if($kegiatan->detail_type == 'donasi_dana') <i class="fas fa-money-bill me-1"></i> Donasi Dana
-                        @elseif($kegiatan->detail_type == 'donasi_darah') <i class="fas fa-tint me-1"></i> Donor Darah
-                        @elseif($kegiatan->detail_type == 'mobil') <i class="fas fa-truck me-1"></i> Logistik
+                        @if($kegiatan->detail_type == 'donasi_dana') <i class="fas fa-hand-holding-usd me-1"></i> Dana
+                        @elseif($kegiatan->detail_type == 'donasi_darah') <i class="fas fa-tint me-1"></i> Darah
+                        @elseif($kegiatan->detail_type == 'mobil') <i class="fas fa-truck me-1"></i> Transport
                         @elseif($kegiatan->detail_type == 'acara') <i class="fas fa-calendar-alt me-1"></i> Event
+                        @elseif($kegiatan->detail_type == 'donasi_barang') <i class="fas fa-box-open me-1"></i> Barang
+                        @elseif($kegiatan->detail_type == 'peminjaman_barang') <i class="fas fa-tools me-1"></i> Pinjam
                         @endif
                     </span>
                 </div>
 
                 <div class="card-body d-flex flex-column">
-                    {{-- Judul (Target Pencarian Utama) --}}
+                    {{-- Judul --}}
                     <h5 class="card-title fw-bold text-dark mb-2 search-title">
                         <a href="{{ route('kegiatan.show', $kegiatan->id) }}" class="text-decoration-none text-dark stretched-link">
                             {{ Str::limit($kegiatan->judul, 50) }}
@@ -70,11 +73,12 @@
                         {{ \Carbon\Carbon::parse($kegiatan->tanggal_mulai)->format('d M Y, H:i') }}
                     </small>
 
-                    {{-- Deskripsi (Target Pencarian Kedua) --}}
+                    {{-- Deskripsi --}}
                     <p class="card-text text-secondary small flex-grow-1 search-desc">
                         {{ Str::limit($kegiatan->deskripsi, 90) }}
                     </p>
 
+                    {{-- Informasi Target Khusus --}}
                     <div class="bg-light rounded p-2 mb-3 small">
                         @if($kegiatan->detail_type == 'donasi_dana')
                         <div class="d-flex justify-content-between fw-bold text-success">
@@ -95,6 +99,17 @@
                         <div class="d-flex justify-content-between fw-bold text-warning-emphasis">
                             <span>Kuota:</span>
                             <span>{{ $kegiatan->detail->kuota_peserta }} Orang</span>
+                        </div>
+                        {{-- INFO BARANG & PINJAM --}}
+                        @elseif($kegiatan->detail_type == 'donasi_barang')
+                        <div class="d-flex justify-content-between fw-bold text-info">
+                            <span>Butuh:</span>
+                            <span>{{ $kegiatan->detail->target_item }} ({{ $kegiatan->detail->target_jumlah }})</span>
+                        </div>
+                        @elseif($kegiatan->detail_type == 'peminjaman_barang')
+                        <div class="d-flex justify-content-between fw-bold text-secondary">
+                            <span>Tersedia:</span>
+                            <span>{{ $kegiatan->detail->nama_barang }} ({{ $kegiatan->detail->stok_tersedia }} Unit)</span>
                         </div>
                         @endif
                     </div>
@@ -146,7 +161,6 @@
 </style>
 @endpush
 
-{{-- Script Search Sederhana --}}
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -170,7 +184,6 @@
                 }
             });
 
-            // Tampilkan pesan kosong jika tidak ada hasil
             if (hasResult) {
                 noResults.classList.add('d-none');
             } else {
@@ -180,5 +193,4 @@
     });
 </script>
 @endpush
-
 @endsection

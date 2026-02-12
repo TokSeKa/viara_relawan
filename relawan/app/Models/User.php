@@ -6,6 +6,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage; // Import Storage
 
 class User extends Authenticatable
 {
@@ -21,12 +22,12 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        // --- SESUAI MIGRASI KAMU ---
+        'profile_photo_path',
         'jabatan',       // admin / relawan
         'no_hp',
         'alamat',
         'jenis_kelamin', // laki-laki / perempuan
-        'tanggal_lahir',
+        'usia_range',
     ];
 
     /**
@@ -47,13 +48,18 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            // Saya hapus 'email_verified_at' karena di migrasimu kolomnya tidak ada
             'password' => 'hashed',
-            
-            // PENTING: Ubah tanggal lahir jadi object Date (Carbon)
-            // Biar bisa dipanggil: $user->tanggal_lahir->format('d F Y')
-            'tanggal_lahir' => 'date', 
         ];
+    }
+
+    // --- ACCESSOR BARU UNTUK FOTO ---
+    public function getProfilePhotoUrlAttribute()
+    {
+        if ($this->profile_photo_path && Storage::disk('public')->exists($this->profile_photo_path)) {
+            return asset('storage/' . $this->profile_photo_path);
+        }
+
+        return 'https://ui-avatars.com/api/?name=' . urlencode($this->name) . '&color=7F9CF5&background=EBF4FF';
     }
 
     // --- RELATIONS ---
@@ -68,15 +74,11 @@ class User extends Authenticatable
         return $this->hasMany(Partisipasi::class);
     }
     
-    // Tambahan: Relasi untuk Admin (Kegiatan yang dibuat oleh admin ini)
     public function kegiatans()
     {
         return $this->hasMany(Kegiatan::class, 'admin_id');
     }
 
-    // --- HELPER FUNCTION (Opsional tapi berguna) ---
-    
-    // Cara pakai: if($user->isAdmin()) { ... }
     public function isAdmin()
     {
         return $this->jabatan === 'admin';

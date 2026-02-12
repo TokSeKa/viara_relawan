@@ -15,6 +15,7 @@ class Materi extends Model
         'judul',
         'deskripsi',
         'file_path',
+        'link',
     ];
 
     // RELASI KE TAGS (Many to Many)

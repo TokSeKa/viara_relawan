@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="container pb-5">
-    {{-- HEADER SAMA --}}
+    {{-- HEADER --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3 class="fw-bold">
             <i class="fas fa-plus-circle me-2"></i>
@@ -15,7 +15,7 @@
         </a>
     </div>
 
-    {{-- ERROR VALIDATION SAMA --}}
+    {{-- ERROR VALIDATION --}}
     @if ($errors->any())
     <div class="alert alert-danger">
         <ul class="mb-0">
@@ -29,11 +29,12 @@
         <input type="hidden" name="jenis_kegiatan" value="{{ $jenis }}">
 
         <div class="row">
+            {{-- KOLOM KIRI (DATA UMUM) --}}
             <div class="col-md-7">
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-white fw-bold py-3">Data Umum Kegiatan</div>
                     <div class="card-body">
-                        {{-- INPUT JUDUL, DESKRIPSI, TANGGAL, BANNER (TETAP SAMA) --}}
+                        {{-- INPUT JUDUL, DESKRIPSI, TANGGAL, BANNER --}}
                         <div class="mb-3">
                             <label class="form-label">Judul Kegiatan</label>
                             <input type="text" name="judul" class="form-control" required value="{{ old('judul') }}">
@@ -60,7 +61,7 @@
                             <input type="file" name="banner_image" class="form-control" accept="image/*">
                         </div>
 
-                        {{-- --- BARU: PILIH TAG --- --}}
+                        {{-- PILIH TAG --}}
                         <div class="mt-4 pt-3 border-top">
                             <label class="form-label fw-bold"><i class="fas fa-tags me-1"></i> Kategori / Tag</label>
                             <div class="card bg-light border-0">
@@ -70,7 +71,6 @@
                                             @foreach($tags as $tag)
                                             <div class="col-md-4 col-sm-6">
                                                 <label class="cursor-pointer d-block h-100">
-                                                    {{-- Cek if old('tags') contain ID ini --}}
                                                     <input type="checkbox" name="tags[]" value="{{ $tag->id }}"
                                                         class="tag-checkbox position-absolute opacity-0"
                                                         {{ is_array(old('tags')) && in_array($tag->id, old('tags')) ? 'checked' : '' }}>
@@ -88,28 +88,24 @@
                                 </div>
                             </div>
                         </div>
-                        {{-- --- END TAG --- --}}
                     </div>
                 </div>
             </div>
 
-            {{-- KOLOM KANAN (DETAIL KHUSUS) TETAP SAMA --}}
+            {{-- KOLOM KANAN (DETAIL KHUSUS) --}}
             <div class="col-md-5">
-                {{-- ... isi detail khusus sama seperti kodemu ... --}}
                 <div class="card shadow-sm border-warning">
                     <div class="card-header bg-warning bg-opacity-10 fw-bold py-3 text-warning-emphasis">
                         Detail Khusus: {{ ucwords(str_replace('_', ' ', $jenis)) }}
                     </div>
                     <div class="card-body">
-                        {{-- ... INCLUDE KODEMU YG LAMA DISINI (Donasi, Darah, dll) ... --}}
-                        {{-- Saya ringkas kodenya agar tidak terlalu panjang, tapi tempel kodemu yg lama disini --}}
+
+                        {{-- 1. DONASI DANA --}}
                         @if($jenis == 'donasi_dana')
-                        {{-- ... input donasi dana ... --}}
                         <div class="mb-3">
                             <label class="form-label">Target Rupiah (Rp)</label>
                             <input type="number" name="target_rupiah" class="form-control" value="{{ old('target_rupiah') }}">
                         </div>
-                        {{-- ... bank container ... --}}
                         <label class="form-label fw-bold">Informasi Rekening Bank</label>
                         <div id="bank-container">
                             <div class="card bg-light p-2 mb-2 bank-row">
@@ -120,13 +116,18 @@
                         </div>
                         <button type="button" class="btn btn-sm btn-outline-primary w-100" onclick="tambahBank()">Tambah Rekening Lain</button>
 
+                        {{-- 2. DONOR DARAH --}}
                         @elseif($jenis == 'donasi_darah')
-                        {{-- ... input donasi darah ... --}}
-                        <div class="mb-3"><label class="form-label">Target Kantong</label><input type="number" name="target_kantong" class="form-control" required value="{{ old('target_kantong') }}"></div>
-                        <div class="mb-3"><label class="form-label">Lokasi PMI</label><input type="text" name="lokasi_pmi" class="form-control" required value="{{ old('lokasi_pmi') }}"></div>
-                        {{-- ... Golongan darah ... --}}
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Golongan Darah</label>
+                            <label class="form-label">Target Kantong</label>
+                            <input type="number" name="target_kantong" class="form-control" required value="{{ old('target_kantong') }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Lokasi PMI</label>
+                            <input type="text" name="lokasi_pmi" class="form-control" required value="{{ old('lokasi_pmi') }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Golongan Darah Dibutuhkan</label>
                             @php $daftarDarah = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']; @endphp
                             <div class="row g-2">
                                 @foreach($daftarDarah as $goldar)
@@ -140,19 +141,66 @@
                             </div>
                         </div>
 
+                        {{-- 3. MOBIL --}}
                         @elseif($jenis == 'mobil')
-                        {{-- ... input mobil ... --}}
-                        <div class="mb-3"><label class="form-label">Jumlah Unit</label><input type="number" name="jumlah_unit" class="form-control" required value="{{ old('jumlah_unit') }}"></div>
-                        <div class="mb-3"><label class="form-label">Lokasi Jemput</label><textarea name="lokasi_jemput" class="form-control" rows="2" required>{{ old('lokasi_jemput') }}</textarea></div>
+                        <div class="mb-3">
+                            <label class="form-label">Jumlah Unit</label>
+                            <input type="number" name="jumlah_unit" class="form-control" required value="{{ old('jumlah_unit') }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Lokasi Jemput</label>
+                            <textarea name="lokasi_jemput" class="form-control" rows="2" required>{{ old('lokasi_jemput') }}</textarea>
+                        </div>
                         <div class="form-check form-switch p-3 bg-light rounded border">
                             <input class="form-check-input" type="checkbox" name="butuh_supir" id="butuh_supir" value="1">
                             <label class="form-check-label fw-bold" for="butuh_supir">Butuh Supir?</label>
                         </div>
 
+                        {{-- 4. ACARA --}}
                         @elseif($jenis == 'acara')
-                        {{-- ... input acara ... --}}
-                        <div class="mb-3"><label class="form-label">Lokasi</label><textarea name="lokasi" class="form-control" rows="2" required>{{ old('lokasi') }}</textarea></div>
-                        <div class="mb-3"><label class="form-label">Kuota Peserta</label><input type="number" name="kuota_peserta" class="form-control" required value="{{ old('kuota_peserta') }}"></div>
+                        <div class="mb-3">
+                            <label class="form-label">Lokasi Acara</label>
+                            <textarea name="lokasi" class="form-control" rows="2" required>{{ old('lokasi') }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Kuota Peserta</label>
+                            <input type="number" name="kuota_peserta" class="form-control" required value="{{ old('kuota_peserta') }}">
+                        </div>
+
+                        {{-- 5. DONASI BARANG (BARU) --}}
+                        @elseif($jenis == 'donasi_barang')
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Target Item / Barang</label>
+                            <input type="text" name="target_item" class="form-control" placeholder="Contoh: Beras, Selimut, Pakaian" required value="{{ old('target_item') }}">
+                            <div class="form-text small">Barang utama yang ingin dikumpulkan.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Target Jumlah</label>
+                            <div class="input-group">
+                                <input type="number" name="target_jumlah" class="form-control" placeholder="0" required value="{{ old('target_jumlah') }}">
+                                <span class="input-group-text bg-light">Pcs / Kg / Paket</span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Lokasi Pengumpulan</label>
+                            <textarea name="lokasi_kumpul" class="form-control" rows="3" placeholder="Alamat posko pengumpulan..." required>{{ old('lokasi_kumpul') }}</textarea>
+                        </div>
+
+                        {{-- 6. PEMINJAMAN BARANG (BARU) --}}
+                        @elseif($jenis == 'peminjaman_barang')
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nama Barang</label>
+                            <input type="text" name="nama_barang" class="form-control" placeholder="Contoh: Tenda, Kursi, Sound System" required value="{{ old('nama_barang') }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Stok Tersedia</label>
+                            <input type="number" name="stok_tersedia" class="form-control" placeholder="0" required value="{{ old('stok_tersedia') }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Persyaratan Peminjaman</label>
+                            <textarea name="persyaratan" class="form-control" rows="3" placeholder="Contoh: Wajib KTP, Deposit uang, dll.">{{ old('persyaratan') }}</textarea>
+                        </div>
+
                         @endif
                     </div>
                 </div>
@@ -167,7 +215,7 @@
     </form>
 </div>
 
-{{-- SCRIPT BANK SAMA --}}
+{{-- SCRIPT BANK --}}
 @if($jenis == 'donasi_dana')
 <script>
     let bankCount = 1;

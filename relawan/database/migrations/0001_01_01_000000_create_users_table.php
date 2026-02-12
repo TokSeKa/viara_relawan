@@ -15,12 +15,22 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
+            $table->string('profile_photo_path', 4096)->nullable();
             $table->string('password');
-            $table->enum('jabatan', ['admin', 'relawan', 'blokir'])->nullable();
+            $table->enum('jabatan', [
+                'admin_super',    // Akses semua
+                'admin_acara',    // Khusus Acara/Event
+                'admin_dana',     // Khusus Donasi Uang
+                'admin_darah',    // Khusus Donor Darah
+                'admin_mobil',    // Khusus Transportasi
+                'admin_logistik', // Khusus Donasi & Pinjam Barang (Baru)
+                'relawan',
+                'blokir'
+            ])->default('relawan');
             $table->string('no_hp');
             $table->string('alamat');
             $table->enum('jenis_kelamin', ['laki-laki', 'perempuan']);
-            $table->date('tanggal_lahir');
+            $table->string('usia_range')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });

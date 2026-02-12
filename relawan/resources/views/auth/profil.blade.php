@@ -2,135 +2,121 @@
 
 @section('title', 'Profil Saya')
 
+{{-- 1. Tambahkan CSS Cropper.js --}}
+@push('styles')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<style>
+    .image-container {
+        max-height: 400px;
+    }
+
+    #image-to-crop {
+        display: block;
+        max-width: 100%;
+    }
+
+    .preview-circle {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        overflow: hidden;
+        margin: 0 auto;
+        border: 2px solid #ddd;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="container pb-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card shadow border-0">
-                {{-- Header --}}
                 <div class="card-header bg-primary text-white text-center py-3">
-                    <h4 class="mb-0 fw-bold">
-                        <i class="fas fa-user-circle me-2"></i> Profil Saya
-                    </h4>
-                    <small class="text-white-50">Perbarui informasi akun Anda</small>
+                    <h4 class="mb-0 fw-bold"><i class="fas fa-user-circle me-2"></i> Profil Saya</h4>
                 </div>
 
                 <div class="card-body p-4 bg-white">
-
-                    {{-- Alert Sukses Update --}}
                     @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
                         <i class="fas fa-check-circle me-1"></i> {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                     @endif
 
-                    <form method="POST" action="{{ route('user.profile.update') }}">
+                    <form method="POST" action="{{ route('user.profile.update') }}" id="profileForm" enctype="multipart/form-data">
                         @csrf
-                        @method('PUT') {{-- PENTING: Untuk update data --}}
+                        @method('PUT')
 
-                        {{-- Tampilkan Jabatan (Read Only) --}}
-                        <div class="text-center mb-4">
-                            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill text-uppercase fw-bold">
-                                {{ $user->jabatan ?? 'User' }}
-                            </span>
+                        <div class="row justify-content-center mb-4">
+                            <div class="col-md-6 text-center">
+                                <div class="mb-3 position-relative d-inline-block">
+                                    {{-- Preview Foto Utama --}}
+                                    <img src="{{ $user->profile_photo_url }}"
+                                        id="main-preview"
+                                        class="rounded-circle object-fit-cover shadow-sm border"
+                                        width="150" height="150" alt="Foto Profil">
+
+                                    <span class="position-absolute bottom-0 end-0 badge rounded-pill bg-warning text-dark shadow-sm">
+                                        {{ strtoupper(str_replace('_', ' ', $user->jabatan)) }}
+                                    </span>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="btn btn-outline-primary btn-sm fw-bold">
+                                        <i class="fas fa-camera me-1"></i> Ganti Foto / Ambil Gambar
+                                        {{-- Input file dengan capture untuk HP --}}
+                                        <input type="file" id="inputImage" name="photo" accept="image/*" capture="user" style="display:none">
+                                    </label>
+                                    <div class="form-text small mt-2">Format: JPG, PNG (Max 2MB).</div>
+
+                                    {{-- Hidden input untuk menyimpan data base64 hasil crop --}}
+                                    <input type="hidden" name="cropped_image" id="cropped_image">
+                                </div>
+                            </div>
                         </div>
 
+                        <hr>
+
                         <div class="row g-3">
-                            {{-- 1. Nama Lengkap --}}
                             <div class="col-md-12">
-                                <label for="name" class="form-label fw-bold">Nama Lengkap</label>
-                                <input type="text" class="form-control @error('name') is-invalid @enderror"
-                                    id="name" name="name"
-                                    value="{{ old('name', $user->name) }}" required>
-                                @error('name')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                                <label class="form-label fw-bold">Nama Lengkap</label>
+                                <input type="text" class="form-control" name="name" value="{{ old('name', $user->name) }}" required>
                             </div>
 
-                            {{-- 2. Email (Biasanya Readonly atau perlu verifikasi ulang, tapi disini kita open edit) --}}
                             <div class="col-md-6">
-                                <label for="email" class="form-label fw-bold">Alamat Email</label>
-                                <input type="email" class="form-control @error('email') is-invalid @enderror"
-                                    id="email" name="email"
-                                    value="{{ old('email', $user->email) }}" required>
-                                @error('email')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                                <label class="form-label fw-bold">Alamat Email</label>
+                                <input type="email" class="form-control" name="email" value="{{ old('email', $user->email) }}" required>
                             </div>
 
-                            {{-- 3. Nomor HP --}}
                             <div class="col-md-6">
-                                <label for="no_hp" class="form-label fw-bold">Nomor HP (WhatsApp)</label>
-                                <input type="text" class="form-control @error('no_hp') is-invalid @enderror"
-                                    id="no_hp" name="no_hp"
-                                    value="{{ old('no_hp', $user->no_hp) }}" required>
-                                @error('no_hp')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                                <label class="form-label fw-bold">Nomor HP</label>
+                                <input type="text" class="form-control" name="no_hp" value="{{ old('no_hp', $user->no_hp) }}" required>
                             </div>
 
-                            {{-- 4. Password Baru (Opsional) --}}
-                            <div class="col-md-6">
-                                <label for="password" class="form-label fw-bold">Password Baru <small class="text-muted fw-normal">(Opsional)</small></label>
-                                <input type="password" class="form-control @error('password') is-invalid @enderror"
-                                    id="password" name="password" placeholder="Kosongkan jika tidak diganti">
-                                @error('password')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            {{-- 5. Konfirmasi Password --}}
-                            <div class="col-md-6">
-                                <label for="password_confirmation" class="form-label fw-bold">Ulangi Password</label>
-                                <input type="password" class="form-control"
-                                    id="password_confirmation" name="password_confirmation" placeholder="Ulangi password baru">
-                            </div>
-
-                            <div class="col-12">
-                                <hr class="my-2">
-                                <h6 class="text-muted mb-3"><i class="fas fa-id-card me-1"></i> Data Pribadi</h6>
-                            </div>
-
-                            {{-- 6. Jenis Kelamin --}}
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Jenis Kelamin</label>
-                                <select class="form-select @error('jenis_kelamin') is-invalid @enderror" name="jenis_kelamin" required>
-                                    <option value="" disabled>-- Pilih Gender --</option>
-                                    <option value="laki-laki" {{ old('jenis_kelamin', $user->jenis_kelamin) == 'laki-laki' ? 'selected' : '' }}>Laki-laki</option>
-                                    <option value="perempuan" {{ old('jenis_kelamin', $user->jenis_kelamin) == 'perempuan' ? 'selected' : '' }}>Perempuan</option>
+                                <select class="form-select" name="jenis_kelamin" required>
+                                    <option value="laki-laki" {{ $user->jenis_kelamin == 'laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                                    <option value="perempuan" {{ $user->jenis_kelamin == 'perempuan' ? 'selected' : '' }}>Perempuan</option>
                                 </select>
-                                @error('jenis_kelamin')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
                             </div>
 
-                            {{-- 7. Tanggal Lahir --}}
                             <div class="col-md-6">
-                                <label for="tanggal_lahir" class="form-label fw-bold">Tanggal Lahir</label>
-                                <input type="date" class="form-control @error('tanggal_lahir') is-invalid @enderror"
-                                    id="tanggal_lahir" name="tanggal_lahir"
-                                    value="{{ old('tanggal_lahir', \Carbon\Carbon::parse($user->tanggal_lahir)->format('Y-m-d')) }}" required>
-                                @error('tanggal_lahir')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                                <label class="form-label fw-bold">Rentang Usia</label>
+                                <select class="form-select" name="usia_range" required>
+                                    <option value="17-25" {{ $user->usia_range == '17-25' ? 'selected' : '' }}>17 - 25 Tahun</option>
+                                    <option value="26-35" {{ $user->usia_range == '26-35' ? 'selected' : '' }}>26 - 35 Tahun</option>
+                                    <option value="36-50" {{ $user->usia_range == '36-50' ? 'selected' : '' }}>36 - 50 Tahun</option>
+                                </select>
                             </div>
 
-                            {{-- 8. Alamat --}}
                             <div class="col-12">
-                                <label for="alamat" class="form-label fw-bold">Alamat Domisili</label>
-                                <textarea class="form-control @error('alamat') is-invalid @enderror"
-                                    id="alamat" name="alamat" rows="3" required>{{ old('alamat', $user->alamat) }}</textarea>
-                                @error('alamat')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
+                                <label class="form-label fw-bold">Alamat Domisili</label>
+                                <textarea class="form-control" name="alamat" rows="3" required>{{ old('alamat', $user->alamat) }}</textarea>
                             </div>
 
-                            {{-- Tombol Simpan --}}
                             <div class="col-12 mt-4 d-flex justify-content-between">
-                                <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary px-4 fw-bold">
-                                    <i class="fas fa-arrow-left me-2"></i> Kembali
-                                </a>
+                                <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary px-4 fw-bold">Kembali</a>
                                 <button type="submit" class="btn btn-primary px-4 fw-bold">
                                     <i class="fas fa-save me-2"></i> SIMPAN PERUBAHAN
                                 </button>
@@ -142,4 +128,100 @@
         </div>
     </div>
 </div>
+
+{{-- 2. MODAL UNTUK CROP --}}
+<div class="modal fade" id="cropModal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title fw-bold">Potong Foto Profil</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0 bg-light">
+                <div class="image-container">
+                    <img id="image-to-crop" src="">
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary fw-bold" id="btnCrop">
+                    <i class="fas fa-crop me-1"></i> POTONG & SIMPAN
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
+
+{{-- 3. JAVASCRIPT LOGIC --}}
+@push('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script>
+    let cropper;
+    const inputImage = document.getElementById('inputImage');
+    const imageToCrop = document.getElementById('image-to-crop');
+    const cropModal = new bootstrap.Modal(document.getElementById('cropModal'));
+    const btnCrop = document.getElementById('btnCrop');
+    const croppedImageInput = document.getElementById('cropped_image');
+    const mainPreview = document.getElementById('main-preview');
+
+    // Saat file dipilih atau kamera mengambil gambar
+    inputImage.addEventListener('change', function(e) {
+        const files = e.target.files;
+        if (files && files.length > 0) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                imageToCrop.src = event.target.result;
+                cropModal.show();
+            };
+            reader.readAsDataURL(files[0]);
+        }
+    });
+
+    // Inisialisasi Cropper saat modal muncul
+    document.getElementById('cropModal').addEventListener('shown.bs.modal', function() {
+        cropper = new Cropper(imageToCrop, {
+            aspectRatio: 1, // Memaksa kotak 1:1
+            viewMode: 1,
+            dragMode: 'move',
+            autoCropArea: 1,
+            restore: false,
+            guides: true,
+            center: true,
+            highlight: false,
+            cropBoxMovable: true,
+            cropBoxResizable: true,
+            toggleDragModeOnDblclick: false,
+        });
+    });
+
+    // Hancurkan cropper saat modal ditutup
+    document.getElementById('cropModal').addEventListener('hidden.bs.modal', function() {
+        cropper.destroy();
+        cropper = null;
+    });
+
+    // Aksi tombol POTONG
+    btnCrop.addEventListener('click', function() {
+        if (!cropper) return;
+
+        // Ambil canvas hasil crop dengan resolusi 400x400 agar hemat storage
+        const canvas = cropper.getCroppedCanvas({
+            width: 400,
+            height: 400,
+        });
+
+        // Ubah canvas ke format Base64
+        const base64data = canvas.toDataURL('image/jpeg', 0.8);
+
+        // Masukkan ke hidden input untuk dikirim ke controller
+        croppedImageInput.value = base64data;
+
+        // Update preview di halaman utama biar user langsung lihat hasilnya
+        mainPreview.src = base64data;
+
+        // Tutup modal
+        cropModal.hide();
+    });
+</script>
+@endpush

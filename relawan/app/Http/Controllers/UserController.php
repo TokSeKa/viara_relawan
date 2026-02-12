@@ -86,9 +86,15 @@ class UserController extends Controller
 
     public function index_admin_user(Request $request)
     {
-        // Ambil data user, urutkan dari yang terbaru
-        // paginate(10) artinya 10 user per halaman
-        $users = User::latest()->paginate(10);
+        $query = User::query();
+
+        // Logika Pencarian
+        $query->when($request->search, function ($q) use ($request) {
+            return $q->where('name', 'like', '%' . $request->search . '%');
+        });
+
+        // Ambil data dengan pagination
+        $users = $query->latest()->paginate(10);
 
         return view('admin.user.daftar-user', compact('users'));
     }
@@ -127,22 +133,40 @@ class UserController extends Controller
 
     public function update_jabatan(Request $request, $id)
     {
-        $user = User::findOrFail($id);
+        $targetUser = User::findOrFail($id);
+        $actor = Auth::user(); // User yang sedang login (yang melakukan aksi)
 
-        // PROTEKSI: User ID 1 tidak boleh diturunkan jabatannya
-        if ($user->id == 1) {
+        // 1. PROTEKSI GENESIS: User ID 1 tidak boleh diubah oleh siapapun
+        if ($targetUser->id == 1) {
             return back()->with('error', 'Akses Ditolak: Jabatan User Utama (Genesis) tidak dapat diubah!');
         }
 
-        // Validasi: Hanya menerima input 'admin' atau 'relawan'
+        // 2. Validasi Input Role
         $request->validate([
-            'jabatan' => 'required|in:admin,relawan,blokir',
+            'jabatan' => 'required|in:admin_super,admin_dana,admin_darah,admin_mobil,admin_acara,admin_logistik,relawan,blokir',
         ]);
 
-        // Simpan perubahan
-        $user->jabatan = $request->jabatan;
-        $user->save();
+        // Jika yang melakukan aksi BUKAN Genesis (User ID 1)...
+        if ($actor->id !== 1) {
 
-        return back()->with('success', 'Jabatan pengguna ' . $user->name . ' berhasil diubah menjadi ' . ucfirst($request->jabatan));
+            // A. Tidak boleh mengangkat orang jadi Admin Super
+            if ($request->jabatan === 'admin_super') {
+                return back()->with('error', 'Hanya Genesis (Super Admin Utama) yang memiliki wewenang mengangkat Admin Super baru.');
+            }
+
+            // B. Tidak boleh menurunkan/mengubah jabatan Admin Super lain
+            if ($targetUser->jabatan === 'admin_super') {
+                return back()->with('error', 'Anda tidak memiliki wewenang untuk mengubah jabatan sesama Admin Super.');
+            }
+        }
+
+        // 4. Simpan Perubahan
+        $targetUser->jabatan = $request->jabatan;
+        $targetUser->save();
+
+        // Formatting pesan sukses
+        $formattedJabatan = ucwords(str_replace('_', ' ', $request->jabatan));
+
+        return back()->with('success', 'Jabatan pengguna ' . $targetUser->name . ' berhasil diubah menjadi ' . $formattedJabatan);
     }
 }

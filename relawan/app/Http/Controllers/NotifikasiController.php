@@ -179,4 +179,27 @@ class NotifikasiController extends Controller
             return back()->withInput()->withErrors(['msg' => 'Gagal update: ' . $e->getMessage()]);
         }
     }
+
+    public function checkNew(Request $request)
+    {
+        $user = Auth::user();
+
+        // Filter: Hanya notifikasi yang dibuat 10 detik terakhir
+        // Kenapa 10 detik? Karena JS kita nanti akan mengecek setiap 5-10 detik.
+        $newNotif = Notifikasi::forUser($user)
+            ->where('created_at', '>', now()->subSeconds(12))
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        if ($newNotif) {
+            return response()->json([
+                'status' => 'found',
+                'title' => $newNotif->judul,
+                'message' => $newNotif->pesan,
+                'type' => $newNotif->type // info, success, warning, dll
+            ]);
+        }
+
+        return response()->json(['status' => 'empty']);
+    }
 }

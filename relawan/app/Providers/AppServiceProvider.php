@@ -31,6 +31,8 @@ class AppServiceProvider extends ServiceProvider
             'donasi_dana'  => 'App\Models\DonasiDana',
             'donasi_darah' => 'App\Models\DonasiDarah',
             'mobil'        => 'App\Models\Kendaraan',
+            'donasi_barang'     => 'App\Models\DonasiBarang',
+            'peminjaman_barang' => 'App\Models\PinjamBarang',
         ]);
         Paginator::useBootstrapFive();
 

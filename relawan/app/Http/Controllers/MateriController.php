@@ -29,25 +29,29 @@ class MateriController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'judul'       => 'required|string|max:255',
-            'deskripsi'   => 'nullable|string',
-            'file_materi' => 'required|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,jpg,jpeg,png,gif,webp,svg,mp3,wav,ogg,mp4,webm|max:20480',
-
-            // VALIDASI TAGS (BARU)
+            'judul'     => 'required|string|max:255',
+            'deskripsi' => 'nullable|string',
+            'file_materi' => 'required_without:link|nullable|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,jpg,jpeg,png,gif,webp,svg,mp3,wav,ogg,mp4,webm|max:20480',
+            'link'        => 'required_without:file_materi|nullable|url',
             'tags'        => 'nullable|array',
             'tags.*'      => 'exists:tags,id',
+        ], [
+            'file_materi.required_without' => 'Silakan upload file atau masukkan link materi.',
+            'link.required_without'        => 'Silakan upload file atau masukkan link materi.',
         ]);
 
-        // Upload File
-        $path = $request->file('file_materi')->store('materis', 'public');
+        $path = null;
+        if ($request->hasFile('file_materi')) {
+            $path = $request->file('file_materi')->store('materis', 'public');
+        }
 
         $materi = Materi::create([
             'judul'     => $request->judul,
             'deskripsi' => $request->deskripsi,
             'file_path' => $path,
+            'link'      => $request->link,
         ]);
 
-        // SIMPAN HUBUNGAN TAGS (BARU)
         if ($request->has('tags')) {
             $materi->tags()->attach($request->tags);
         }
@@ -73,34 +77,26 @@ class MateriController extends Controller
         $materi = Materi::findOrFail($id);
 
         $request->validate([
-            'judul'       => 'required|string|max:255',
-            'deskripsi'   => 'nullable|string',
+            'judul'     => 'required|string|max:255',
+            'deskripsi' => 'nullable|string',
             'file_materi' => 'nullable|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,jpg,jpeg,png,gif,webp,svg,mp3,wav,ogg,mp4,webm|max:20480',
-
-            // VALIDASI TAGS (BARU)
+            'link'        => 'nullable|url',
             'tags'        => 'nullable|array',
             'tags.*'      => 'exists:tags,id',
         ]);
 
-        // Data text update
         $materi->judul = $request->judul;
         $materi->deskripsi = $request->deskripsi;
+        $materi->link = $request->link;
 
-        // Logic Update File
         if ($request->hasFile('file_materi')) {
-            // Hapus file lama
             if ($materi->file_path && Storage::disk('public')->exists($materi->file_path)) {
                 Storage::disk('public')->delete($materi->file_path);
             }
-
-            // Upload baru
-            $path = $request->file('file_materi')->store('materis', 'public');
-            $materi->file_path = $path;
+            $materi->file_path = $request->file('file_materi')->store('materis', 'public');
         }
 
         $materi->save();
-
-        // UPDATE HUBUNGAN TAGS (BARU - Pakai sync agar otomatis tambah/hapus)
         $materi->tags()->sync($request->tags ?? []);
 
         return redirect()->route('admin.materi.index')->with('success', 'Materi berhasil diperbarui!');

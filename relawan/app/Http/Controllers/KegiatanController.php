@@ -7,6 +7,8 @@ use App\Models\DonasiDana;
 use App\Models\DonasiDarah;
 use App\Models\Kendaraan;
 use App\Models\Acara;
+use App\Models\DonasiBarang;
+use App\Models\PinjamBarang;
 use App\Models\Tag;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -21,47 +23,55 @@ class KegiatanController extends Controller
      */
     public function index()
     {
-        // 1. Ambil ID Tag milik User yang sedang login
-        // Hasilnya array, misal: [2, 5] (Kesehatan, Lingkungan)
-        /** @var \App\Models\User $user */ // biar tags() gk show red alert
-        $user = Auth::user();
-        $userTagIds = $user->tags()->pluck('id')->toArray();
+        // 1. Mulai query dasar: harus yang berstatus 'buka'
+        $query = Kegiatan::with(['detail', 'tags'])->where('status', 'buka');
 
-        // 2. Query Kegiatan
-        $kegiatans = Kegiatan::with(['detail', 'tags']) // Load 'tags' juga biar efisien
-            ->where('status', 'buka') // Filter wajib: Status harus Buka
+        // 2. Cek apakah ini User Login atau Guest?
+        if (Auth::check()) {
+            /** @var \App\Models\User $user */
+            $user = Auth::user();
 
-            // --- FILTER PERSONALISASI (LOGIC TAG) ---
-            ->where(function ($q) use ($userTagIds) {
-                // KONDISI A: Kegiatan Spesifik (Cocok dengan Minat User)
+            // Ambil ID tag milik user
+            $userTagIds = $user->tags()->pluck('id')->toArray();
+
+            // LOGIKA LOGIN: Minat Saya OR Kegiatan Tanpa Tag
+            $query->where(function ($q) use ($userTagIds) {
                 $q->whereHas('tags', function ($subQuery) use ($userTagIds) {
                     $subQuery->whereIn('tags.id', $userTagIds);
-                })
+                })->orWhereDoesntHave('tags');
+            });
+        } else {
+            // LOGIKA GUEST: Hanya tampilkan kegiatan yang TIDAK punya tag sama sekali
+            // Ini memastikan guest tidak melihat kegiatan spesifik kategori apapun
+            $query->whereDoesntHave('tags');
+        }
 
-                    // KONDISI B: Kegiatan Umum (Tidak punya tag spesifik)
-                    // Contoh: Acara Ulang Tahun Yayasan, Rapat Umum (Wajib muncul buat semua)
-                    ->orWhereDoesntHave('tags');
-            })
+        // 3. Eksekusi query
+        $kegiatans = $query->orderBy('tanggal_mulai', 'asc')->paginate(9);
 
-            ->orderBy('tanggal_mulai', 'asc') // Urutkan yang paling dekat tanggalnya
-            ->paginate(9);
-
-        // 3. Kirim ke View
         return view('relawan.daftar-kegiatan', compact('kegiatans'));
     }
 
     public function index_admin(Request $request)
     {
-        // 1. Inisialisasi Query + Hitung Partisipasi
-        // withCount('partisipasis') akan menambahkan atribut 'partisipasis_count'
         $query = Kegiatan::with('detail')->withCount('partisipasis')->latest();
+
+        // 1. FILTER SEARCH (BARU)
+        if ($request->filled('search')) {
+            $query->where('judul', 'like', '%' . $request->search . '%');
+        }
 
         // 2. Filter Status
         if ($request->has('status') && in_array($request->status, ['buka', 'tutup', 'selesai'])) {
             $query->where('status', $request->status);
         }
 
-        // 3. Filter Waktu
+        // 3. Filter Jenis
+        if ($request->filled('jenis')) {
+            $query->where('detail_type', $request->jenis);
+        }
+
+        // 4. Filter Waktu
         if ($request->filled('start_date')) {
             $query->whereDate('tanggal_mulai', '>=', $request->start_date);
         }
@@ -69,7 +79,6 @@ class KegiatanController extends Controller
             $query->whereDate('tanggal_mulai', '<=', $request->end_date);
         }
 
-        // 4. Eksekusi
         $kegiatans = $query->paginate(10)->withQueryString();
 
         return view('admin.kegiatan.index', compact('kegiatans'));
@@ -85,12 +94,28 @@ class KegiatanController extends Controller
      */
     public function create($jenis)
     {
-        $validTypes = ['donasi_dana', 'donasi_darah', 'mobil', 'acara'];
+        $user = Auth::user();
+
+        // Validasi Jenis Kegiatan
+        $validTypes = ['donasi_dana', 'donasi_darah', 'mobil', 'acara', 'donasi_barang', 'peminjaman_barang'];
         if (!in_array($jenis, $validTypes)) abort(404);
 
-        // AMBIL SEMUA TAG UNTUK DITAMPILKAN DI CHECKBOX
-        $tags = Tag::orderBy('nama_tag', 'asc')->get();
+        // Otorisasi Per Role
+        $mapping = [
+            'admin_dana'     => ['donasi_dana'],
+            'admin_darah'    => ['donasi_darah'],
+            'admin_mobil'    => ['mobil'],
+            'admin_acara'    => ['acara'],
+            'admin_logistik' => ['donasi_barang', 'peminjaman_barang'],
+        ];
 
+        if ($user->jabatan !== 'admin_super') {
+            if (!isset($mapping[$user->jabatan]) || !in_array($jenis, $mapping[$user->jabatan])) {
+                return redirect()->route('admin.kegiatan.pilih')->with('error', 'Anda tidak berwenang membuat jenis kegiatan ini.');
+            }
+        }
+
+        $tags = Tag::orderBy('nama_tag', 'asc')->get();
         return view('admin.kegiatan.tambah-kegiatan', compact('jenis', 'tags'));
     }
 
@@ -103,13 +128,20 @@ class KegiatanController extends Controller
             'banner_image'    => 'nullable|image|mimes:jpeg,png,jpg|max:4096',
             'tanggal_mulai'   => 'required|date',
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
-            'jenis_kegiatan'  => 'required|in:donasi_dana,donasi_darah,mobil,acara',
+            'jenis_kegiatan'  => 'required|in:donasi_dana,donasi_darah,mobil,acara,donasi_barang,peminjaman_barang',
             'tags'            => 'nullable|array',
             'tags.*'          => 'exists:tags,id',
         ];
 
         // 2. VALIDASI KHUSUS (Sesuai Migrasi Kamu)
-        if ($request->jenis_kegiatan == 'donasi_dana') {
+        if ($request->jenis_kegiatan == 'donasi_barang') {
+            $rules['target_item'] = 'required|string';
+            $rules['target_jumlah'] = 'required|numeric';
+            $rules['lokasi_kumpul'] = 'required|string';
+        } elseif ($request->jenis_kegiatan == 'peminjaman_barang') {
+            $rules['nama_barang'] = 'required|string';
+            $rules['stok_tersedia'] = 'required|numeric';
+        } elseif ($request->jenis_kegiatan == 'donasi_dana') {
             // Migrasi: decimal nullable, json
             $rules['target_rupiah'] = 'nullable|numeric';
             $rules['info_bank']     = 'required|array';
@@ -175,22 +207,35 @@ class KegiatanController extends Controller
                             'kuota_peserta' => $request->kuota_peserta,
                         ]);
                         break;
+
+                    case 'donasi_barang':
+                        $detail = DonasiBarang::create([
+                            'target_item' => $request->target_item,
+                            'target_jumlah' => $request->target_jumlah,
+                            'lokasi_kumpul' => $request->lokasi_kumpul,
+                        ]);
+                        break;
+                    case 'peminjaman_barang':
+                        $detail = PinjamBarang::create([
+                            'nama_barang' => $request->nama_barang,
+                            'stok_tersedia' => $request->stok_tersedia,
+                            'persyaratan' => $request->persyaratan,
+                        ]);
+                        break;
                 }
 
                 // C. Simpan Data KEGIATAN (Induknya)
                 $kegiatan = Kegiatan::create([
-                    'judul'           => $request->judul,
-                    'slug'            => Str::slug($request->judul) . '-' . time(),
-                    'deskripsi'       => $request->deskripsi,
-                    'banner_image'    => $imagePath,
-                    'tanggal_mulai'   => $request->tanggal_mulai,
+                    'judul' => $request->judul,
+                    'slug' => Str::slug($request->judul) . '-' . time(),
+                    'deskripsi' => $request->deskripsi,
+                    'banner_image' => $imagePath,
+                    'tanggal_mulai' => $request->tanggal_mulai,
                     'tanggal_selesai' => $request->tanggal_selesai,
-                    'status'          => 'buka',
-                    'admin_id'        => Auth::id() ?? 1, // Pakai Auth::id() biar VS Code aman
-
-                    // KUNCI POLYMORPHIC
-                    'detail_id'       => $detail->id,
-                    'detail_type'     => $request->jenis_kegiatan,
+                    'status' => 'buka',
+                    'admin_id' => Auth::id(),
+                    'detail_id' => $detail->id,
+                    'detail_type' => $request->jenis_kegiatan,
                 ]);
 
                 // attach() digunakan untuk menambah data ke tabel pivot (kegiatan_tags)
@@ -250,25 +295,33 @@ class KegiatanController extends Controller
             'tanggal_mulai'   => 'required|date',
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
             'status'          => 'required|in:buka,tutup,selesai',
-            // VALIDASI TAG UPDATE
             'tags'            => 'nullable|array',
             'tags.*'          => 'exists:tags,id',
         ];
 
-        // ... (Validasi Detail TETAP SAMA) ...
+        // VALIDASI DETAIL UPDATE
         if ($kegiatan->detail_type == 'donasi_dana') {
             $rules['target_rupiah'] = 'nullable|numeric';
             $rules['info_bank']     = 'required|array';
         } elseif ($kegiatan->detail_type == 'donasi_darah') {
-            $rules['target_kantong']      = 'required|numeric';
+            $rules['target_kantong']        = 'required|numeric';
             $rules['golongan_darah_needed'] = 'required|array';
-            $rules['lokasi_pmi']          = 'required|string';
+            $rules['lokasi_pmi']            = 'required|string';
         } elseif ($kegiatan->detail_type == 'mobil') {
             $rules['jumlah_unit']   = 'required|numeric';
             $rules['lokasi_jemput'] = 'required|string';
         } elseif ($kegiatan->detail_type == 'acara') {
             $rules['lokasi']        = 'required|string';
             $rules['kuota_peserta'] = 'required|numeric';
+        }
+        // --- TAMBAHAN VALIDASI UPDATE ---
+        elseif ($kegiatan->detail_type == 'donasi_barang') {
+            $rules['target_item']   = 'required|string';
+            $rules['target_jumlah'] = 'required|numeric';
+            $rules['lokasi_kumpul'] = 'required|string';
+        } elseif ($kegiatan->detail_type == 'peminjaman_barang') {
+            $rules['nama_barang']   = 'required|string';
+            $rules['stok_tersedia'] = 'required|numeric';
         }
 
         $request->validate($rules);
@@ -292,7 +345,7 @@ class KegiatanController extends Controller
                 'status'          => $request->status,
             ]);
 
-            // C. Update Detail (Switch case TETAP SAMA seperti kodemu)
+            // C. Update Detail
             switch ($kegiatan->detail_type) {
                 case 'donasi_dana':
                     $kegiatan->detail->update([
@@ -320,10 +373,24 @@ class KegiatanController extends Controller
                         'kuota_peserta' => $request->kuota_peserta,
                     ]);
                     break;
+                // --- UPDATE BARU ---
+                case 'donasi_barang':
+                    $kegiatan->detail->update([
+                        'target_item'   => $request->target_item,
+                        'target_jumlah' => $request->target_jumlah,
+                        'lokasi_kumpul' => $request->lokasi_kumpul,
+                    ]);
+                    break;
+                case 'peminjaman_barang':
+                    $kegiatan->detail->update([
+                        'nama_barang'   => $request->nama_barang,
+                        'stok_tersedia' => $request->stok_tersedia,
+                        'persyaratan'   => $request->persyaratan,
+                    ]);
+                    break;
             }
 
-            // D. UPDATE TAGS (BARU)
-            // sync() otomatis hapus tag lama yang tidak dipilih, dan tambah yang baru
+            // D. Update Tags
             $kegiatan->tags()->sync($request->tags ?? []);
         });
 
