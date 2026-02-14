@@ -117,9 +117,36 @@
                     </div>
                     @endif
 
-                    {{-- 2. TAMPILAN LINK EKSTERNAL (Jika Ada) --}}
+                    {{-- 2. TAMPILAN LINK EKSTERNAL (YOUTUBE EMBED / LINK BIASA) --}}
                     @if($materi->link)
                     <div class="p-4 {{ $materi->file_path ? 'border-top bg-white' : '' }}">
+
+                        {{-- CEK APAKAH LINK YOUTUBE? --}}
+                        @php
+                        $isYoutube = false;
+                        $embedUrl = '';
+
+                        // Regex sederhana untuk menangkap ID video YouTube
+                        if (preg_match('/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i', $materi->link, $match)) {
+                            $isYoutube = true;
+                            $videoId = $match[1];
+                            $embedUrl = "https://www.youtube.com/embed/" . $videoId;
+                        }
+                        @endphp
+
+                        @if($isYoutube)
+                        {{-- TAMPILAN KHUSUS YOUTUBE --}}
+                        <div class="card border-0 shadow-sm bg-black">
+                            <div class="ratio ratio-16x9">
+                                <iframe src="{{ $embedUrl }}" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-start">
+                            <small class="text-muted"><i class="fab fa-youtube text-danger me-1"></i> Video diputar dari YouTube</small>
+                        </div>
+
+                        @else
+                        {{-- TAMPILAN LINK BIASA (NON-YOUTUBE) --}}
                         <div class="card border-primary bg-primary bg-opacity-10 py-4">
                             <div class="card-body text-center">
                                 <i class="fas fa-external-link-alt fa-3x text-primary mb-3"></i>
@@ -133,6 +160,8 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
+
                     </div>
                     @endif
 

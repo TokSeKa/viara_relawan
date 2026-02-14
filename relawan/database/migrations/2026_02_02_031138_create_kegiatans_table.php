@@ -24,6 +24,7 @@ return new class extends Migration
             $table->dateTime('tanggal_mulai_acara');
             $table->dateTime('tanggal_selesai_acara');
             $table->enum('status', ['buka', 'tutup', 'selesai'])->default('buka');
+            $table->boolean('notified_h_minus_1')->default(false);
 
             // Creator
             $table->foreignId('admin_id')->constrained('users');
