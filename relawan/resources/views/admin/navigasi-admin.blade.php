@@ -131,7 +131,6 @@
         </div>
 
         {{-- Card: Pusat Laporan --}}
-        @if(Auth::user()->jabatan == 'admin_super')
         <div class="col-md-6 col-lg-4">
             <a href="{{ route('admin.laporan.index') }}" class="card h-100 text-decoration-none shadow-sm border-0 hover-lift">
                 <div class="card-body p-4 d-flex align-items-center">
@@ -145,7 +144,6 @@
                 </div>
             </a>
         </div>
-        @endif
 
     </div>
 

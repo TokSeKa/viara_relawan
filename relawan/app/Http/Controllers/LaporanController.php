@@ -7,7 +7,7 @@ use App\Models\Kegiatan;
 use App\Models\Tag;
 use App\Models\Partisipasi;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class LaporanController extends Controller
 {
@@ -23,36 +23,62 @@ class LaporanController extends Controller
         return view('admin.laporan.filter-rekap');
     }
 
-    // 3. PROSES CETAK / TAMPILKAN HASIL
     public function cetakKegiatan(Request $request)
     {
-        // Validasi Input
+        $user = Auth::user();
+
+        // 1. Validasi Input
         $request->validate([
             'tgl_awal'  => 'required|date',
             'tgl_akhir' => 'required|date|after_or_equal:tgl_awal',
-            'status'    => 'nullable|string', // Buka, Tutup, Selesai, Semua
-            'jenis'     => 'nullable|string', // donasi_dana, acara, dll
+            'status'    => 'nullable|string',
+            'jenis'     => 'nullable|string',
         ]);
 
-        // Mulai Query
-        // with('detail') penting agar data polimorfik (anaknya) terambil
+        // 2. Mulai Query Dasar
         $query = Kegiatan::with(['admin', 'detail'])
             ->whereBetween('tanggal_mulai', [$request->tgl_awal . ' 00:00:00', $request->tgl_akhir . ' 23:59:59']);
 
-        // Filter Status (Jika user tidak pilih 'semua')
+        // -----------------------------------------------------------
+        // 3. FILTER HAK AKSES JABATAN (SECURITY LAYER)
+        // -----------------------------------------------------------
+
+        // Peta Akses
+        $accessMap = [
+            'admin_dana'     => ['donasi_dana'],
+            'admin_darah'    => ['donasi_darah'],
+            'admin_mobil'    => ['mobil'],
+            'admin_acara'    => ['acara'],
+            'admin_logistik' => ['donasi_barang', 'peminjaman_barang'],
+        ];
+
+        // Jika BUKAN Super Admin, terapkan filter wajib
+        if ($user->jabatan !== 'admin_super') {
+            if (isset($accessMap[$user->jabatan])) {
+                // Paksa query hanya mencari jenis kegiatan milik dia
+                $query->whereIn('detail_type', $accessMap[$user->jabatan]);
+            } else {
+                // Jika jabatan tidak dikenali, jangan tampilkan apa-apa
+                $query->where('id', 0);
+            }
+        }
+        // 4. Filter Tambahan dari Input User (Form)
+
+        // Filter Status
         if ($request->has('status') && $request->status != 'semua') {
             $query->where('status', $request->status);
         }
 
-        // Filter Jenis Detail (Jika user tidak pilih 'semua')
+        // Filter Jenis Detail
+        // Catatan: Jika Admin Dana memilih 'acara', query akan menghasilkan kosong 
+        // karena bertabrakan dengan filter hak akses di atas (AND logic).
         if ($request->has('jenis') && $request->jenis != 'semua') {
             $query->where('detail_type', $request->jenis);
         }
 
-        // Eksekusi Query
+        // 5. Eksekusi Query
         $laporan = $query->orderBy('tanggal_mulai', 'asc')->get();
 
-        // Kirim data laporan & data request (untuk judul laporan) ke view
         return view('admin.laporan.cetak-kegiatan', compact('laporan', 'request'));
     }
 
@@ -92,9 +118,36 @@ class LaporanController extends Controller
     // 5. HALAMAN PILIH KEGIATAN (Untuk Laporan Peserta)
     public function indexPeserta()
     {
-        // Ambil list kegiatan untuk dropdown
-        // Diurutkan dari yang terbaru biar gampang nyarinya
-        $kegiatans = Kegiatan::orderBy('tanggal_mulai', 'desc')->get();
+        $user = Auth::user();
+
+        // 1. Mulai Query
+        $query = Kegiatan::orderBy('tanggal_mulai', 'desc');
+
+        // 2. Definisi Hak Akses (Mapping Jabatan -> detail_type)
+        // Sesuaikan string 'donasi_dana', 'acara', dll dengan isi kolom 'detail_type' di databasemu
+        $accessMap = [
+            'admin_dana'     => ['donasi_dana'],
+            'admin_darah'    => ['donasi_darah'],
+            'admin_mobil'    => ['mobil'],
+            'admin_acara'    => ['acara'],
+            'admin_logistik' => ['donasi_barang', 'peminjaman_barang'], // Admin logistik pegang 2 tipe
+        ];
+
+        // 3. Terapkan Filter
+        // Jika BUKAN 'admin_super', kita filter query-nya
+        if ($user->jabatan !== 'admin_super') {
+            if (isset($accessMap[$user->jabatan])) {
+                // Ambil kegiatan yang jenisnya sesuai hak akses jabatan
+                $query->whereIn('detail_type', $accessMap[$user->jabatan]);
+            } else {
+                // Jika jabatan tidak ada di map (misal relawan biasa nyasar ke sini),
+                // kosongkan hasil biar aman
+                $query->where('id', 0);
+            }
+        }
+
+        // 4. Eksekusi Query
+        $kegiatans = $query->get();
 
         return view('admin.laporan.index-peserta', compact('kegiatans'));
     }
@@ -167,11 +220,4 @@ class LaporanController extends Controller
 
         return view('admin.laporan.cetak-tag', compact('tags', 'totalRelawan'));
     }
-
-    // jenis laporan yg mau kubuat:
-    // 1. laporan kegiatan (berdasarkan periode) || filter berdasarkan status || bisa cetak pdf
-    // 2. laporan relawan (berdasarkan periode) || bisa cetak pdf || relawan yg paling banyak parsipasi? tag yg paling banyak dipakai?
-    // 3. laporan tag? tag yg paling banyak dipakai? tag yg paling banyak ikut kegiatan? tag yg paling banyak ikut kegiatan relawan tertentu? tag yg paling banyak ikut kegiatan kategori tertentu? 
-
-
 }
