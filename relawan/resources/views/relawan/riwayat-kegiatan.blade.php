@@ -29,7 +29,8 @@
                         <tr>
                             <th class="px-4 py-3" width="5%">No</th>
                             <th class="py-3" width="35%">Nama Kegiatan</th>
-                            <th class="py-3">Waktu Pelaksanaan</th>
+                            <th class="py-3">Waktu Mulai Pendaftaran</th>
+                            <th class="py-3">Waktu Tutup Pendaftaran</th>
                             <th class="py-3">Tanggal Gabung</th>
                             <th class="py-3 text-center">Status Kegiatan</th>
                             <th class="py-3 text-end pe-4">Aksi</th>
@@ -65,6 +66,12 @@
                                 <td class="small text-secondary">
                                     <i class="far fa-calendar-alt me-1"></i>
                                     {{ \Carbon\Carbon::parse($data->kegiatan->tanggal_mulai)->format('d M Y, H:i') }}
+                                </td>
+
+                                {{-- Waktu Tutup --}}
+                                <td class="small text-secondary">
+                                    <i class="far fa-calendar-alt me-1"></i>
+                                    {{ \Carbon\Carbon::parse($data->kegiatan->tanggal_selesai)->format('d M Y, H:i') }}
                                 </td>
 
                                 {{-- Tanggal Join (Created At Partisipasi) --}}

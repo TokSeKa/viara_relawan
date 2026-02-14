@@ -58,6 +58,22 @@
                                 <input type="datetime-local" name="tanggal_selesai" class="form-control" required value="{{ old('tanggal_selesai', $kegiatan->tanggal_selesai ? $kegiatan->tanggal_selesai->format('Y-m-d\TH:i') : '') }}">
                             </div>
                         </div>
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <hr class="my-2 text-muted opacity-25">
+                                <label class="form-label fw-bold text-primary small text-uppercase">Waktu Pelaksanaan Acara (Info)</label>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Acara Mulai</label>
+                                <input type="datetime-local" name="tanggal_mulai_acara" class="form-control" required
+                                    value="{{ old('tanggal_mulai_acara', $kegiatan->tanggal_mulai_acara ? $kegiatan->tanggal_mulai_acara->format('Y-m-d\TH:i') : '') }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Acara Selesai</label>
+                                <input type="datetime-local" name="tanggal_selesai_acara" class="form-control" required
+                                    value="{{ old('tanggal_selesai_acara', $kegiatan->tanggal_selesai_acara ? $kegiatan->tanggal_selesai_acara->format('Y-m-d\TH:i') : '') }}">
+                            </div>
+                        </div>
                         <div class="mb-3">
                             <label class="form-label">Ganti Banner (Opsional)</label>
                             @if($kegiatan->banner_image)
@@ -196,7 +212,7 @@
 <script>
     let bankCount = {
         {
-            count($kegiatan -> detail -> info_bank ?? [])
+            count($kegiatan - > detail - > info_bank ?? [])
         }
     };
 

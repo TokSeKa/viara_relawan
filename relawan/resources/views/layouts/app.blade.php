@@ -162,11 +162,6 @@ $globalCount = $query->count();
                 <a class="navbar-brand fw-bold text-uppercase d-flex align-items-center gap-2" href="{{ url('/') }}">
                     <i class="fas fa-hand-holding-heart text-warning fs-4 flex-shrink-0"></i>
                     <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center lh-1">
-                        @auth
-                        @if(str_contains(Auth::user()->jabatan, 'admin'))
-                        <span class="badge bg-danger mb-1 mb-lg-0 me-0 me-lg-2" style="font-size: 0.6rem;">ADMIN PANEL</span>
-                        @endif
-                        @endauth
                         <span class="text-wrap" style="font-size: 1rem;">{{ $webProfile->name }}</span>
                     </div>
                 </a>
@@ -202,7 +197,7 @@ $globalCount = $query->count();
                         @auth
                         {{-- 3. MENU LOGIN --}}
                         @if(str_contains(Auth::user()->jabatan, 'admin'))
-                        <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active-nav' : '' }}" href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+                        <li class="nav-item"><a class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active-nav' : '' }}" href="{{ route('admin.dashboard') }}">Admin Panel</a></li>
                         @else
                         <li class="nav-item"><a class="nav-link {{ request()->routeIs('riwayat') ? 'active-nav' : '' }}" href="{{ route('riwayat') }}">Riwayat Saya</a></li>
                         @endif

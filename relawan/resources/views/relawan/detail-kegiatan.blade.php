@@ -75,8 +75,8 @@
                         @endif
                     </div>
 
-                    {{-- Info Waktu Pelaksanaan --}}
-                    <h6 class="fw-bold text-dark"><i class="far fa-clock me-2 text-warning"></i> Waktu Pelaksanaan</h6>
+                    {{-- 1. Info Waktu Pendaftaran --}}
+                    <h6 class="fw-bold text-dark"><i class="far fa-clock me-2 text-warning"></i> Waktu Pendaftaran</h6>
                     <ul class="list-unstyled small mb-4 text-secondary">
                         <li class="mb-1 d-flex justify-content-between">
                             <span>Mulai:</span>
@@ -87,6 +87,19 @@
                             <span class="fw-bold text-dark">{{ $kegiatan->tanggal_selesai->format('d M Y, H:i') }}</span>
                         </li>
                     </ul>
+
+                    {{-- 2. Info Waktu Pelaksanaan Acara (BARU) --}}
+                    <h6 class="fw-bold text-dark"><i class="far fa-calendar-check me-2 text-success"></i> Pelaksanaan Acara</h6>
+                    <div class="alert alert-success bg-opacity-10 border-success border-opacity-25 p-2 small mb-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-success">Mulai:</span>
+                            <span class="fw-bold text-dark">{{ $kegiatan->tanggal_mulai_acara->format('d M Y, H:i') }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-success">Selesai:</span>
+                            <span class="fw-bold text-dark">{{ $kegiatan->tanggal_selesai_acara->format('d M Y, H:i') }}</span>
+                        </div>
+                    </div>
 
                     <hr class="border-secondary border-opacity-25">
 

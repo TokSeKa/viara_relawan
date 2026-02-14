@@ -167,8 +167,8 @@
 
                             {{-- Waktu --}}
                             <td>
-                                <div class="small fw-bold">{{ \Carbon\Carbon::parse($kegiatan->tanggal_mulai)->format('d M Y') }}</div>
-                                <div class="small text-muted">{{ \Carbon\Carbon::parse($kegiatan->tanggal_mulai)->format('H:i') }} WIB</div>
+                                <div class="small fw-bold">{{ \Carbon\Carbon::parse($kegiatan->tanggal_mulai_acara)->format('d M Y') }}</div>
+                                <div class="small text-muted">{{ \Carbon\Carbon::parse($kegiatan->tanggal_mulai_acara)->format('H:i') }} WIB</div>
                             </td>
 
                             {{-- Status --}}

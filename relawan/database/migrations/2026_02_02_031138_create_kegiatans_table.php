@@ -21,6 +21,8 @@ return new class extends Migration
             $table->string('banner_image')->nullable();
             $table->dateTime('tanggal_mulai');
             $table->dateTime('tanggal_selesai');
+            $table->dateTime('tanggal_mulai_acara');
+            $table->dateTime('tanggal_selesai_acara');
             $table->enum('status', ['buka', 'tutup', 'selesai'])->default('buka');
 
             // Creator

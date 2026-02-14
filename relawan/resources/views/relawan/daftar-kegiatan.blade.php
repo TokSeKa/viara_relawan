@@ -69,8 +69,8 @@
                     </h5>
 
                     <small class="text-muted mb-3 d-block">
-                        <i class="far fa-clock me-1 text-primary"></i>
-                        {{ \Carbon\Carbon::parse($kegiatan->tanggal_mulai)->format('d M Y, H:i') }}
+                        <i class="far fa-clock me-1 text-primary"></i> Deadline pendaftaran:
+                        {{ \Carbon\Carbon::parse($kegiatan->tanggal_selesai_acara)->format('d M Y, H:i') }}
                     </small>
 
                     {{-- Deskripsi --}}

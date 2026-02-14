@@ -128,6 +128,8 @@ class KegiatanController extends Controller
             'banner_image'    => 'nullable|image|mimes:jpeg,png,jpg|max:4096',
             'tanggal_mulai'   => 'required|date',
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
+            'tanggal_mulai_acara'   => 'required|date',
+            'tanggal_selesai_acara' => 'required|date|after:tanggal_mulai_acara',
             'jenis_kegiatan'  => 'required|in:donasi_dana,donasi_darah,mobil,acara,donasi_barang,peminjaman_barang',
             'tags'            => 'nullable|array',
             'tags.*'          => 'exists:tags,id',
@@ -232,6 +234,8 @@ class KegiatanController extends Controller
                     'banner_image' => $imagePath,
                     'tanggal_mulai' => $request->tanggal_mulai,
                     'tanggal_selesai' => $request->tanggal_selesai,
+                    'tanggal_mulai_acara'   => $request->tanggal_mulai_acara,
+                    'tanggal_selesai_acara' => $request->tanggal_selesai_acara,
                     'status' => 'buka',
                     'admin_id' => Auth::id(),
                     'detail_id' => $detail->id,
@@ -243,8 +247,6 @@ class KegiatanController extends Controller
                     $kegiatan->tags()->attach($request->tags);
                 }
             }); // End Transaction
-
-
             return redirect()->route('admin.kegiatan.index')->with('success', 'Kegiatan berhasil ditambahkan!');
             // return json
             // return response()->json(['success' => 'Kegiatan berhasil ditambahkan!']);
@@ -263,7 +265,14 @@ class KegiatanController extends Controller
     {
         // 1. Eager Load Relasi
         // Kita butuh data detail (anak), tags, dan siapa admin pembuatnya
-        $kegiatan->load(['detail', 'tags', 'admin']);
+        $kegiatan->load([
+            'detail',
+            'admin',
+            'tags' => function ($query) {
+                // Ambil tag yang is_admin_only = false (0)
+                $query->where('is_admin_only', false);
+            }
+        ]);
 
         // 2. Kirim ke View Detail Relawan
         return view('relawan.detail-kegiatan', compact('kegiatan'));
@@ -294,6 +303,8 @@ class KegiatanController extends Controller
             'banner_image'    => 'nullable|image|max:4096',
             'tanggal_mulai'   => 'required|date',
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
+            'tanggal_mulai_acara'   => 'required|date',
+            'tanggal_selesai_acara' => 'required|date|after:tanggal_mulai_acara',
             'status'          => 'required|in:buka,tutup,selesai',
             'tags'            => 'nullable|array',
             'tags.*'          => 'exists:tags,id',
@@ -342,6 +353,8 @@ class KegiatanController extends Controller
                 'deskripsi'       => $request->deskripsi,
                 'tanggal_mulai'   => $request->tanggal_mulai,
                 'tanggal_selesai' => $request->tanggal_selesai,
+                'tanggal_mulai_acara'   => $request->tanggal_mulai_acara,
+                'tanggal_selesai_acara' => $request->tanggal_selesai_acara,
                 'status'          => $request->status,
             ]);
 

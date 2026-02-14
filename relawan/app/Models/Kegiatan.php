@@ -15,6 +15,8 @@ class Kegiatan extends Model
     protected $casts = [
         'tanggal_mulai' => 'datetime',
         'tanggal_selesai' => 'datetime',
+        'tanggal_mulai_acara' => 'datetime',
+        'tanggal_selesai_acara' => 'datetime',
     ];
 
     // 2. RELASI POLYMORPHIC (Konek ke Anak)
@@ -33,7 +35,7 @@ class Kegiatan extends Model
     {
         return $this->hasMany(Partisipasi::class);
     }
-    
+
     public function admin()
     {
         return $this->belongsTo(User::class, 'admin_id');
