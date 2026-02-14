@@ -2,12 +2,17 @@
 
 @section('title', 'Profil Saya')
 
-{{-- 1. Tambahkan CSS Cropper.js --}}
+{{-- 1. Tambahkan CSS Cropper.js & Kustomisasi Lingkaran --}}
 @push('styles')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
 <style>
+    /* Agar gambar di dalam modal tidak melebihi batas */
     .image-container {
         max-height: 400px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: #333;
     }
 
     #image-to-crop {
@@ -15,13 +20,19 @@
         max-width: 100%;
     }
 
-    .preview-circle {
-        width: 150px;
-        height: 150px;
+    /* KUSTOMISASI CSS AGAR CROPPER TERLIHAT BULAT */
+    .cropper-view-box,
+    .cropper-face {
         border-radius: 50%;
-        overflow: hidden;
-        margin: 0 auto;
-        border: 2px solid #ddd;
+        /* Membuat area seleksi jadi bulat */
+    }
+
+    /* Opsi tambahan: Menghilangkan garis putus-putus agar lebih bersih */
+    .cropper-dashed,
+    .cropper-point,
+    .cropper-line {
+        opacity: 0.5;
+        /* Bisa diset 0 jika ingin benar-benar bersih */
     }
 </style>
 @endpush
@@ -51,6 +62,7 @@
                             <div class="col-md-6 text-center">
                                 <div class="mb-3 position-relative d-inline-block">
                                     {{-- Preview Foto Utama --}}
+                                    {{-- Tambahkan border-radius 50% di sini juga --}}
                                     <img src="{{ $user->profile_photo_url }}"
                                         id="main-preview"
                                         class="rounded-circle object-fit-cover shadow-sm border"
@@ -132,20 +144,20 @@
 {{-- 2. MODAL UNTUK CROP --}}
 <div class="modal fade" id="cropModal" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title fw-bold">Potong Foto Profil</h5>
+        <div class="modal-content border-0">
+            <div class="modal-header bg-dark text-white py-3">
+                <h5 class="modal-title fw-bold text-center w-100">Sesuaikan Foto Profil</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-0 bg-light">
-                <div class="image-container">
-                    <img id="image-to-crop" src="">
+            <div class="modal-body p-0 bg-black d-flex justify-content-center align-items-center" style="min-height: 300px;">
+                <div class="image-container w-100">
+                    <img id="image-to-crop" src="" style="max-width: 100%; display: block;">
                 </div>
             </div>
-            <div class="modal-footer d-flex justify-content-between">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="button" class="btn btn-primary fw-bold" id="btnCrop">
-                    <i class="fas fa-crop me-1"></i> POTONG & SIMPAN
+            <div class="modal-footer bg-light d-flex justify-content-between">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary fw-bold px-4" id="btnCrop">
+                    <i class="fas fa-check me-1"></i> SIMPAN FOTO
                 </button>
             </div>
         </div>
@@ -181,38 +193,46 @@
     // Inisialisasi Cropper saat modal muncul
     document.getElementById('cropModal').addEventListener('shown.bs.modal', function() {
         cropper = new Cropper(imageToCrop, {
-            aspectRatio: 1, // Memaksa kotak 1:1
+            aspectRatio: 1, // Wajib 1:1 agar lingkaran sempurna
             viewMode: 1,
             dragMode: 'move',
-            autoCropArea: 1,
+            autoCropArea: 0.8, // Ukuran awal crop area
             restore: false,
-            guides: true,
+            guides: false, // Hilangkan garis panduan agar lebih bersih
             center: true,
             highlight: false,
             cropBoxMovable: true,
             cropBoxResizable: true,
             toggleDragModeOnDblclick: false,
+            // Opsional: Kunci rasio agar tidak bisa ditarik jadi lonjong
+            zoomable: true,
+            background: false, // Hilangkan background grid
         });
     });
 
-    // Hancurkan cropper saat modal ditutup
+    // Hancurkan cropper saat modal ditutup agar tidak berat/buggy
     document.getElementById('cropModal').addEventListener('hidden.bs.modal', function() {
-        cropper.destroy();
-        cropper = null;
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+        // Reset input file agar bisa pilih file yang sama lagi jika user membatalkan
+        inputImage.value = '';
     });
 
     // Aksi tombol POTONG
     btnCrop.addEventListener('click', function() {
         if (!cropper) return;
 
-        // Ambil canvas hasil crop dengan resolusi 400x400 agar hemat storage
+        // Ambil canvas hasil crop
         const canvas = cropper.getCroppedCanvas({
             width: 400,
             height: 400,
+            imageSmoothingQuality: 'high',
         });
 
-        // Ubah canvas ke format Base64
-        const base64data = canvas.toDataURL('image/jpeg', 0.8);
+        // Ubah canvas ke format Base64 (JPG kualitas 90%)
+        const base64data = canvas.toDataURL('image/jpeg', 0.9);
 
         // Masukkan ke hidden input untuk dikirim ke controller
         croppedImageInput.value = base64data;
