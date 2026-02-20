@@ -1,59 +1,153 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 📖 Dokumentasi Akses & Navigasi Sistem Viara Maitreyawira
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Dokumen ini berisi informasi kredensial login, alur navigasi (routing), dan daftar fitur yang tersedia untuk **Admin** dan **Relawan**.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🔐 1. Akun Login & Kredensial (Testing)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Berikut adalah daftar akun dummy yang tersedia setelah menjalankan seed database.
+**Password untuk semua akun:** `12345678`
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Role | Email | Spesialisasi / Keterangan |
+| :--- | :--- | :--- |
+| **Super Admin** | `maitreyawira@gmail.com` | **Akses Penuh** (Yayasan Utama/Pemilik) |
+| **Bot Admin** | `admin@test.com` | Akun Bot untuk Testing fitur Admin Umum |
+| **Admin Logistik**| `logistik@viara.com` | Khusus Manajemen Barang & Gudang |
+| **Admin Acara** | `acara@viara.com` | Khusus Manajemen Event/Kegiatan |
+| **Bot Relawan** | `relawan@test.com` | Akun Bot untuk Testing fitur Relawan |
+| **Relawan User** | `email_user@gmail.com` | Simulasi User Biasa (Nama: Dylan) |
 
-## Learning Laravel
+> **Catatan:** Password menggunakan Hash Bcrypt standar Laravel. Jika ingin mengubah password, silakan edit file `database/seeders/UserSeeder.php` lalu jalankan `php artisan db:seed`.
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## 🚦 2. Alur Akses Utama (Routing Logic)
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Sistem menggunakan *Smart Redirect* pada halaman utama (`/`):
 
-## Laravel Sponsors
+1. **Guest (Belum Login):**
+* Otomatis diarahkan ke halaman **Login** (`/login`).
+* Tersedia opsi **Register** (`/register`) untuk pendaftaran relawan baru.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
 
-### Premium Partners
+2. **Sudah Login:**
+* Jika **Admin**  Redirect ke `admin.dashboard`.
+* Jika **Relawan**  Redirect ke `dashboard` (Navigasi Relawan).
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
 
-## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+---
 
-## Code of Conduct
+## 🖥️ 3. Peta Fitur: POV ADMIN
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+**URL Prefix:** `/admin/*`
+**Middleware:** `auth`, `admin`
 
-## Security Vulnerabilities
+Admin memiliki akses penuh ke manajemen sistem. Berikut navigasi fiturnya:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### A. Dashboard Utama (`/admin/dashboard`)
 
-## License
+* Pusat navigasi (Menu Card) ke semua modul di bawah ini.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### B. Manajemen Kegiatan (`/admin/kegiatan`)
+
+* **Lihat Daftar:** Menampilkan semua kegiatan (filter status).
+* **Tambah Kegiatan:** Memilih jenis detail kegiatan:
+* *Acara/Event* (Kuota, Lokasi)
+* *Donasi Dana* (Target Rp, Bank)
+* *Donasi Darah* (Target Kantong, Gol Darah)
+* *Mobil/Transport* (Armada, Supir)
+
+
+* **Edit & Update:** Mengubah informasi kegiatan.
+* **Cek Peserta:** Melihat siapa saja relawan yang mendaftar di kegiatan tertentu.
+
+### C. Manajemen User & Relawan (`/admin/users`)
+
+* **Daftar User:** Melihat seluruh pengguna terdaftar.
+* **Detail User:** Melihat profil lengkap.
+* **Edit Minat/Tag:** Mengubah tag minat user secara manual.
+* **Ubah Jabatan:** Promosi (Relawan  Admin) atau Demosi.
+
+### D. Manajemen Master Data
+
+* **Tags/Minat (`/admin/tags`):** Tambah/Edit/Hapus kategori minat (misal: Kesehatan, Logistik).
+* **Materi/Pustaka (`/admin/materi`):** Upload dokumen PDF atau Link Video untuk bahan pembelajaran relawan.
+
+### E. Broadcast Notifikasi (`/admin/notifikasi`)
+
+* **Buat Notifikasi:** Mengirim pesan broadcast.
+* **Target Audience:** Bisa memilih target spesifik:
+* *All Users* (Semua orang)
+* *By Kegiatan* (Peserta kegiatan tertentu saja)
+* *By Tag* (Relawan dengan minat tertentu saja)
+
+
+
+### F. Pusat Laporan (`/admin/laporan`)
+
+* **Rekapitulasi:** Laporan kegiatan berdasarkan periode tanggal & status.
+* **Data Peserta:** Cetak daftar hadir/relawan per kegiatan.
+* **Potensi Relawan:** Analisis relawan paling aktif berdasarkan Tag Minat.
+* **Statistik Tag:** Grafik distribusi minat relawan.
+
+---
+
+## 🙋‍♂️ 4. Peta Fitur: POV RELAWAN
+
+**URL Prefix:** `/` (Tanpa prefix admin)
+**Middleware:** `auth`
+
+Relawan memiliki akses untuk berpartisipasi dan mengelola profil diri.
+
+### A. Dashboard Relawan (`/dashboard`)
+
+* Halaman utama berisi menu navigasi cepat.
+
+### B. Kegiatan (`/kegiatan`)
+
+* **Jelajah:** Melihat daftar kegiatan yang berstatus 'Buka'.
+* *Filter Cerdas:* Kegiatan yang sesuai minat (Tag) akan diprioritaskan/ditandai.
+
+
+* **Detail & Join:** Melihat detail acara dan tombol **"Daftar Jadi Relawan"**.
+* **Leave:** Membatalkan partisipasi (jika belum ditutup).
+
+### C. Riwayat & Profil
+
+* **Riwayat (`/riwayat`):** Melihat daftar kegiatan yang pernah diikuti.
+* **Profil Saya (`/profil`):** Mengubah data diri (Nama, HP, Password).
+* **Minat Saya (`/minat-saya`):** Memilih Tag minat (misal: Suka Masak, Punya Mobil) agar mendapatkan rekomendasi kegiatan yang cocok.
+
+### D. Pustaka Materi (`/materi`)
+
+* Mengakses dan mengunduh materi panduan atau SOP yang diunggah admin.
+* Filter materi berdasarkan Kategori Tag.
+
+---
+
+## 🛠️ Instalasi & Setup (Quick Start)
+
+Langkah-langkah untuk menjalankan project ini di local/VPS setelah melakukan `git clone`:
+
+```bash
+# 1. Install Dependencies (Backend & Frontend)
+composer install
+npm install && npm run build
+
+# 2. Setup Environment
+cp .env.example .env
+php artisan key:generate
+# 🛑 STOP DULU: Buka file .env, atur nama database (DB_DATABASE), username, dan password.
+
+# 3. Setup Database
+php artisan migrate:fresh
+# 📝 Catatan: Jika punya file dump SQL (dummy data), import manual via phpMyAdmin setelah langkah ini.
+
+# 4. Setup Storage Link (Wajib untuk Foto/Audio)
+php artisan storage:link
+
+# 5. Jalankan Server
+php artisan serve
+
+```
